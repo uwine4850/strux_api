@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package protobufs;
+
+option go_package = "/protobufs";
+
+service Reverse {
+  rpc CreateUser(RequestCreateUser) returns (BaseResponse) {}
+  rpc GetUser(RequestGetUser) returns (ResponseGetUser) {}
+}
+
+message RequestCreateUser {
+  string Username = 1;
+  string Password = 2;
+}
+
+message RequestGetUser {
+  string Username = 1;
+}
+
+message ResponseGetUser{
+  string Username = 1;
+  bool success = 2;
+}
+
+message BaseResponse {
+  string message = 1;
+  bool success = 2;
+}
