@@ -21,5 +21,5 @@ func CreateLog(filePath string, logLevel log.Level, pkgName string, callFunc str
 		"func":    callFunc,
 		"descr":   descr,
 		"error":   error,
-	})
+	}).Error(error)
 }

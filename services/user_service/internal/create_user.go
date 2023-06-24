@@ -45,8 +45,12 @@ func CreateUser(username string, password string) *protobufs.BaseResponse {
 	// add user
 	if user.Username != "" {
 		msg := fmt.Sprintf("User %s already exist.", user.Username)
-		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "CreateUser", "", msg)
-		return SendResponseError(msg)
+		resp := &protobufs.BaseResponse{
+			Message: msg,
+			Success: false,
+			Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
+		}
+		return resp
 	} else {
 		// hashing password
 		passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), 4)
@@ -66,6 +70,7 @@ func CreateUser(username string, password string) *protobufs.BaseResponse {
 		} else {
 			resp := &protobufs.BaseResponse{
 				Message: fmt.Sprintf("User %s created successfuly.", username),
+				Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
 				Success: true,
 			}
 			return resp

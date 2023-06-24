@@ -6,24 +6,21 @@ import (
 	"strux_api/services/user_service/protobufs"
 )
 
-type Response struct {
-	Message string
-	Success bool
-}
-
 // FindOneWitchResponse Searches for a single value in the database. Returns the corresponding response.
-func FindOneWitchResponse(operation db.DatabaseOperation, colName string, value string, res interface{}) (Response, error) {
+func FindOneWitchResponse(operation db.DatabaseOperation, colName string, value string, res interface{}) (*protobufs.BaseResponse, error) {
 	err := operation.FindOneByValue(colName, value, res)
 	if err != nil && err != mongo.ErrNoDocuments {
-		resp := Response{
+		resp := &protobufs.BaseResponse{
 			Message: err.Error(),
 			Success: false,
+			Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusError},
 		}
 		return resp, err
 	}
-	resp := Response{
+	resp := &protobufs.BaseResponse{
 		Message: "OK",
 		Success: true,
+		Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
 	}
 	return resp, nil
 }
@@ -32,6 +29,7 @@ func FindOneWitchResponse(operation db.DatabaseOperation, colName string, value 
 func SendResponseError(errText string) *protobufs.BaseResponse {
 	resp := &protobufs.BaseResponse{
 		Message: errText,
+		Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusError},
 		Success: false,
 	}
 	return resp

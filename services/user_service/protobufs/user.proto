@@ -9,6 +9,11 @@ service Reverse {
   rpc GetUser(RequestGetUser) returns (ResponseGetUser) {}
 }
 
+enum ResponseStatus{
+  StatusError = 0;
+  StatusOk = 1;
+}
+
 message RequestCreateUser {
   string Username = 1;
   string Password = 2;
@@ -26,4 +31,5 @@ message ResponseGetUser{
 message BaseResponse {
   string message = 1;
   bool success = 2;
+  repeated ResponseStatus status = 3;
 }
