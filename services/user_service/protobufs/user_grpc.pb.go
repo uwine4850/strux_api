@@ -18,122 +18,122 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// ReverseClient is the client API for Reverse service.
+// UserClient is the client API for User service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type ReverseClient interface {
+type UserClient interface {
 	CreateUser(ctx context.Context, in *RequestCreateUser, opts ...grpc.CallOption) (*BaseResponse, error)
-	GetUser(ctx context.Context, in *RequestGetUser, opts ...grpc.CallOption) (*ResponseGetUser, error)
+	UserExist(ctx context.Context, in *RequestExistUser, opts ...grpc.CallOption) (*BaseResponse, error)
 }
 
-type reverseClient struct {
+type userClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewReverseClient(cc grpc.ClientConnInterface) ReverseClient {
-	return &reverseClient{cc}
+func NewUserClient(cc grpc.ClientConnInterface) UserClient {
+	return &userClient{cc}
 }
 
-func (c *reverseClient) CreateUser(ctx context.Context, in *RequestCreateUser, opts ...grpc.CallOption) (*BaseResponse, error) {
+func (c *userClient) CreateUser(ctx context.Context, in *RequestCreateUser, opts ...grpc.CallOption) (*BaseResponse, error) {
 	out := new(BaseResponse)
-	err := c.cc.Invoke(ctx, "/protobufs.Reverse/CreateUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/protobufs.User/CreateUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *reverseClient) GetUser(ctx context.Context, in *RequestGetUser, opts ...grpc.CallOption) (*ResponseGetUser, error) {
-	out := new(ResponseGetUser)
-	err := c.cc.Invoke(ctx, "/protobufs.Reverse/GetUser", in, out, opts...)
+func (c *userClient) UserExist(ctx context.Context, in *RequestExistUser, opts ...grpc.CallOption) (*BaseResponse, error) {
+	out := new(BaseResponse)
+	err := c.cc.Invoke(ctx, "/protobufs.User/UserExist", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// ReverseServer is the server API for Reverse service.
-// All implementations must embed UnimplementedReverseServer
+// UserServer is the server API for User service.
+// All implementations must embed UnimplementedUserServer
 // for forward compatibility
-type ReverseServer interface {
+type UserServer interface {
 	CreateUser(context.Context, *RequestCreateUser) (*BaseResponse, error)
-	GetUser(context.Context, *RequestGetUser) (*ResponseGetUser, error)
-	mustEmbedUnimplementedReverseServer()
+	UserExist(context.Context, *RequestExistUser) (*BaseResponse, error)
+	mustEmbedUnimplementedUserServer()
 }
 
-// UnimplementedReverseServer must be embedded to have forward compatible implementations.
-type UnimplementedReverseServer struct {
+// UnimplementedUserServer must be embedded to have forward compatible implementations.
+type UnimplementedUserServer struct {
 }
 
-func (UnimplementedReverseServer) CreateUser(context.Context, *RequestCreateUser) (*BaseResponse, error) {
+func (UnimplementedUserServer) CreateUser(context.Context, *RequestCreateUser) (*BaseResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
 }
-func (UnimplementedReverseServer) GetUser(context.Context, *RequestGetUser) (*ResponseGetUser, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
+func (UnimplementedUserServer) UserExist(context.Context, *RequestExistUser) (*BaseResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UserExist not implemented")
 }
-func (UnimplementedReverseServer) mustEmbedUnimplementedReverseServer() {}
+func (UnimplementedUserServer) mustEmbedUnimplementedUserServer() {}
 
-// UnsafeReverseServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ReverseServer will
+// UnsafeUserServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to UserServer will
 // result in compilation errors.
-type UnsafeReverseServer interface {
-	mustEmbedUnimplementedReverseServer()
+type UnsafeUserServer interface {
+	mustEmbedUnimplementedUserServer()
 }
 
-func RegisterReverseServer(s grpc.ServiceRegistrar, srv ReverseServer) {
-	s.RegisterService(&Reverse_ServiceDesc, srv)
+func RegisterUserServer(s grpc.ServiceRegistrar, srv UserServer) {
+	s.RegisterService(&User_ServiceDesc, srv)
 }
 
-func _Reverse_CreateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _User_CreateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RequestCreateUser)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ReverseServer).CreateUser(ctx, in)
+		return srv.(UserServer).CreateUser(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/protobufs.Reverse/CreateUser",
+		FullMethod: "/protobufs.User/CreateUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ReverseServer).CreateUser(ctx, req.(*RequestCreateUser))
+		return srv.(UserServer).CreateUser(ctx, req.(*RequestCreateUser))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Reverse_GetUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RequestGetUser)
+func _User_UserExist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestExistUser)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ReverseServer).GetUser(ctx, in)
+		return srv.(UserServer).UserExist(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/protobufs.Reverse/GetUser",
+		FullMethod: "/protobufs.User/UserExist",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ReverseServer).GetUser(ctx, req.(*RequestGetUser))
+		return srv.(UserServer).UserExist(ctx, req.(*RequestExistUser))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Reverse_ServiceDesc is the grpc.ServiceDesc for Reverse service.
+// User_ServiceDesc is the grpc.ServiceDesc for User service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Reverse_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "protobufs.Reverse",
-	HandlerType: (*ReverseServer)(nil),
+var User_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "protobufs.User",
+	HandlerType: (*UserServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "CreateUser",
-			Handler:    _Reverse_CreateUser_Handler,
+			Handler:    _User_CreateUser_Handler,
 		},
 		{
-			MethodName: "GetUser",
-			Handler:    _Reverse_GetUser_Handler,
+			MethodName: "UserExist",
+			Handler:    _User_UserExist_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

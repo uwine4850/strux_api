@@ -4,14 +4,9 @@ package protobufs;
 
 option go_package = "/protobufs";
 
-service Reverse {
+service User {
   rpc CreateUser(RequestCreateUser) returns (BaseResponse) {}
-  rpc GetUser(RequestGetUser) returns (ResponseGetUser) {}
-}
-
-enum ResponseStatus{
-  StatusError = 0;
-  StatusOk = 1;
+  rpc UserExist(RequestExistUser) returns (BaseResponse) {}
 }
 
 message RequestCreateUser {
@@ -19,13 +14,13 @@ message RequestCreateUser {
   string Password = 2;
 }
 
-message RequestGetUser {
+message RequestExistUser {
   string Username = 1;
 }
 
-message ResponseGetUser{
-  string Username = 1;
-  bool success = 2;
+enum ResponseStatus{
+  StatusError = 0;
+  StatusOk = 1;
 }
 
 message BaseResponse {
