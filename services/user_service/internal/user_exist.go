@@ -6,7 +6,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"strux_api/internal/config"
 	"strux_api/internal/config/schema"
-	"strux_api/pkg/db"
 	"strux_api/pkg/logging"
 	"strux_api/services/user_service/protobufs"
 )
@@ -15,27 +14,22 @@ import (
 // If no errors occur during the check (see status), success: true means that the user was found, and false is not found.
 func UserExist(username string) *protobufs.BaseResponse {
 	// connect to database
-	client, err := db.GetMongoClient()
-	if err != nil {
-		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "UserExist", "", err.Error())
-		return SendResponseError(err.Error())
-	}
-	clientConnect, ctx, err := client.Connect()
-	if err != nil {
-		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "UserExist", "", err.Error())
-		return SendResponseError(err.Error())
+	clientConnection, ctx, errResponse := GetDbClientConnection()
+	if errResponse != nil {
+		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "UserExist", "", errResponse.Message)
+		return errResponse
 	}
 	defer func(clientConnect *mongo.Client, ctx context.Context) {
 		err := clientConnect.Disconnect(ctx)
 		if err != nil {
 			logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "UserExist", "", err.Error())
 		}
-	}(clientConnect, ctx)
+	}(clientConnection, ctx)
 
 	// get user operation
-	operation := GetUserOperation(clientConnect, ctx)
+	operation := GetUserOperation(clientConnection, ctx)
 	var user schema.User
-	err = operation.FindOneByValue("username", username, &user)
+	err := operation.FindOneByValue("username", username, &user)
 	if err != nil && err != mongo.ErrNoDocuments {
 		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "UserExist", "", err.Error())
 		return SendResponseError(err.Error())

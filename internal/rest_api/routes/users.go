@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"net/http"
+	"reflect"
 	"strux_api/internal/config"
 	"strux_api/pkg/logging"
 	"strux_api/services/user_service/protobufs"
@@ -17,6 +18,7 @@ func UsersInit() *chi.Mux {
 
 	r.Post("/create-user/", createUserService)
 	r.Get("/user-exist/", userExistService)
+	r.Delete("/user-delete/", userDeleteService)
 	return r
 }
 
@@ -26,7 +28,11 @@ func UsersInit() *chi.Mux {
 func createUserService(w http.ResponseWriter, r *http.Request) {
 	connection, err := CheckFormKeyAndGetUserServiceConnection(w, r, []string{"username", "password"})
 	if err != nil {
-		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "createUserService", "", err.Error())
+		if reflect.DeepEqual(err, ErrFormKeyNotExist{}) {
+			logging.CreateLog(config.APILogFileName, logrus.WarnLevel, "routes", "createUserService", "", err.Error())
+		} else {
+			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "createUserService", "", err.Error())
+		}
 		SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -110,7 +116,11 @@ func createUserService(w http.ResponseWriter, r *http.Request) {
 func userExistService(w http.ResponseWriter, r *http.Request) {
 	connection, err := CheckFormKeyAndGetUserServiceConnection(w, r, []string{"username"})
 	if err != nil {
-		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userExistService", "", err.Error())
+		if reflect.DeepEqual(err, ErrFormKeyNotExist{}) {
+			logging.CreateLog(config.APILogFileName, logrus.WarnLevel, "routes", "userExistService", "", err.Error())
+		} else {
+			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userExistService", "", err.Error())
+		}
 		SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -139,6 +149,53 @@ func userExistService(w http.ResponseWriter, r *http.Request) {
 	if response.Status[0] == protobufs.ResponseStatus_StatusError {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userExistService", "", response.Message)
 		SendResponseError(w, response.Message, http.StatusInternalServerError)
+		return
+	}
+
+	// No errors found, return user existence response.
+	err = CreateResponse(w, http.StatusOK, response)
+	if err != nil {
+		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userExistService", "", err.Error())
+	}
+}
+
+func userDeleteService(w http.ResponseWriter, r *http.Request) {
+	// connect to user service and check form keys
+	connection, err := CheckFormKeyAndGetUserServiceConnection(w, r, []string{"username", "password"})
+	if err != nil {
+		if reflect.DeepEqual(err, ErrFormKeyNotExist{}) {
+			logging.CreateLog(config.APILogFileName, logrus.WarnLevel, "routes", "userDeleteService", "", err.Error())
+		} else {
+			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userDeleteService", "", err.Error())
+		}
+		SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer func(connection *grpc.ClientConn) {
+		err := connection.Close()
+		if err != nil {
+			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userDeleteService", "", err.Error())
+			SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		}
+	}(connection)
+
+	// get form data
+	values, _, _ := GetFormData(r)
+
+	// exec and processing UserDelete function
+	client := protobufs.NewUserClient(connection)
+	response, err := client.UserDelete(context.Background(), &protobufs.RequestDeleteUser{
+		Username: values["username"][0],
+		Password: values["password"][0],
+	})
+	if err != nil {
+		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userDeleteService", "", err.Error())
+		SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if response.Status[0] == protobufs.ResponseStatus_StatusError {
+		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userDeleteService", "", response.Message)
+		SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

@@ -7,7 +7,7 @@ import (
 	"net"
 	"strux_api/internal/config"
 	"strux_api/services/user_service/internal"
-	protobufs2 "strux_api/services/user_service/protobufs"
+	protobufs "strux_api/services/user_service/protobufs"
 )
 
 func main() {
@@ -20,7 +20,7 @@ func main() {
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 
-	protobufs2.RegisterUserServer(grpcServer, &server{})
+	protobufs.RegisterUserServer(grpcServer, &server{})
 	err = grpcServer.Serve(listener)
 	if err != nil {
 		panic(err)
@@ -28,15 +28,20 @@ func main() {
 }
 
 type server struct {
-	protobufs2.UnimplementedUserServer
+	protobufs.UnimplementedUserServer
 }
 
-func (s *server) CreateUser(c context.Context, request *protobufs2.RequestCreateUser) (*protobufs2.BaseResponse, error) {
+func (s *server) CreateUser(c context.Context, request *protobufs.RequestCreateUser) (*protobufs.BaseResponse, error) {
 	resp := internal.CreateUser(request.Username, request.Password)
 	return resp, nil
 }
 
-func (s *server) UserExist(c context.Context, request *protobufs2.RequestExistUser) (*protobufs2.BaseResponse, error) {
+func (s *server) UserExist(c context.Context, request *protobufs.RequestExistUser) (*protobufs.BaseResponse, error) {
 	resp := internal.UserExist(request.Username)
+	return resp, nil
+}
+
+func (s *server) UserDelete(c context.Context, request *protobufs.RequestDeleteUser) (*protobufs.BaseResponse, error) {
+	resp := internal.UserDelete(request.Username, request.Password)
 	return resp, nil
 }

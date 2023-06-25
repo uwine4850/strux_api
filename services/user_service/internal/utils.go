@@ -1,8 +1,12 @@
 package internal
 
 import (
+	"context"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
+	"strux_api/internal/config"
 	"strux_api/pkg/db"
+	"strux_api/pkg/logging"
 	"strux_api/services/user_service/protobufs"
 )
 
@@ -33,4 +37,19 @@ func SendResponseError(errText string) *protobufs.BaseResponse {
 		Success: false,
 	}
 	return resp
+}
+
+// GetDbClientConnection Returns the connection to the client
+func GetDbClientConnection() (*mongo.Client, context.Context, *protobufs.BaseResponse) {
+	client, err := db.GetMongoClient()
+	if err != nil {
+		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "CreateUser", "", err.Error())
+		return nil, nil, SendResponseError(err.Error())
+	}
+	clientConnect, ctx, err := client.Connect()
+	if err != nil {
+		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "CreateUser", "", err.Error())
+		return nil, nil, SendResponseError(err.Error())
+	}
+	return clientConnect, ctx, nil
 }

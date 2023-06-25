@@ -7,6 +7,7 @@ option go_package = "/protobufs";
 service User {
   rpc CreateUser(RequestCreateUser) returns (BaseResponse) {}
   rpc UserExist(RequestExistUser) returns (BaseResponse) {}
+  rpc UserDelete(RequestDeleteUser) returns (BaseResponse) {}
 }
 
 message RequestCreateUser {
@@ -16,6 +17,11 @@ message RequestCreateUser {
 
 message RequestExistUser {
   string Username = 1;
+}
+
+message RequestDeleteUser {
+  string Username = 1;
+  string Password = 2;
 }
 
 enum ResponseStatus{

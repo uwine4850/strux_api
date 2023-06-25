@@ -15,15 +15,11 @@ import (
 
 // CreateUser Adding a new user to the database if it was not previously found
 func CreateUser(username string, password string) *protobufs.BaseResponse {
-	client, err := db.GetMongoClient()
-	if err != nil {
-		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "CreateUser", "", err.Error())
-		return SendResponseError(err.Error())
-	}
-	clientConnect, ctx, err := client.Connect()
-	if err != nil {
-		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "CreateUser", "", err.Error())
-		return SendResponseError(err.Error())
+	// connect to database
+	clientConnection, ctx, errResponse := GetDbClientConnection()
+	if errResponse != nil {
+		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "CreateUser", "", errResponse.Message)
+		return errResponse
 	}
 	defer func(clientConnect *mongo.Client, ctx context.Context) {
 		err := clientConnect.Disconnect(ctx)
@@ -31,10 +27,10 @@ func CreateUser(username string, password string) *protobufs.BaseResponse {
 			logging.CreateLog(config.UserServiceLogFileName, logrus.PanicLevel, "user_service.internal", "CreateUser", "", err.Error())
 			panic(err)
 		}
-	}(clientConnect, ctx)
+	}(clientConnection, ctx)
 
 	// get user
-	operation := GetUserOperation(clientConnect, ctx)
+	operation := GetUserOperation(clientConnection, ctx)
 	user := schema.User{}
 	resp, err := FindOneWitchResponse(operation, "username", username, &user)
 	if err != nil {

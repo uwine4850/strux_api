@@ -91,3 +91,10 @@ func (do *DatabaseOperation) FindOneByValue(colName string, value string, result
 	err := collection.FindOne(do.Ctx, filter).Decode(result)
 	return err
 }
+
+func (do *DatabaseOperation) DeleteOneEntry(colName string, value string) (*mongo.DeleteResult, error) {
+	collection := do.Client.Database(do.DbName).Collection(do.CollectionName)
+	filter := bson.D{{colName, value}}
+	res, err := collection.DeleteOne(do.Ctx, filter)
+	return res, err
+}
