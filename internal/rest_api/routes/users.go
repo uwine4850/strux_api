@@ -3,7 +3,6 @@ package routes
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -25,24 +24,11 @@ func UsersInit() *chi.Mux {
 // a request to create a new user.
 // In this case, the answer is either various kinds of errors, or messages about the correct completion of the operation.
 func createUserService(w http.ResponseWriter, r *http.Request) {
-	// check post keys exist
-	values, _, err := GetFormData(r)
-	if err != nil {
-		panic(err)
-	}
-	key, ok := CheckPostKeysExist(values, []string{"username", "password"})
-	if !ok {
-		msg := fmt.Sprintf("Post key '%s' not exist", key)
-		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "createUserService", "", msg)
-		SendResponseError(w, msg, http.StatusInternalServerError)
-		return
-	}
-
-	// connect to user service
-	connection, err := ConnectToUserService()
+	connection, err := CheckFormKeyAndGetUserServiceConnection(w, r, []string{"username", "password"})
 	if err != nil {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "createUserService", "", err.Error())
 		SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	defer func(connection *grpc.ClientConn) {
 		err := connection.Close()
@@ -53,6 +39,7 @@ func createUserService(w http.ResponseWriter, r *http.Request) {
 	}(connection)
 	client := protobufs.NewUserClient(connection)
 
+	values, _, _ := GetFormData(r)
 	// send request and processing response
 	request := &protobufs.RequestCreateUser{
 		Username: values["username"][0],
@@ -121,22 +108,11 @@ func createUserService(w http.ResponseWriter, r *http.Request) {
 
 // userExistService sends a user existence request to the user service.
 func userExistService(w http.ResponseWriter, r *http.Request) {
-	// check valid form keys
-	values, _, _ := GetFormData(r)
-	key, ok := CheckPostKeysExist(values, []string{"username"})
-	if !ok {
-		msg := fmt.Sprintf("Post key '%s' not exist", key)
-		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userExistService", "", msg)
-		SendResponseError(w, msg, http.StatusInternalServerError)
-		return
-	}
-	checkExistUsername := values["username"][0]
-
-	// connect to user service
-	userServiceConnect, err := ConnectToUserService()
+	connection, err := CheckFormKeyAndGetUserServiceConnection(w, r, []string{"username"})
 	if err != nil {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userExistService", "", err.Error())
 		SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	defer func(userServiceConnect *grpc.ClientConn) {
 		err := userServiceConnect.Close()
@@ -144,9 +120,11 @@ func userExistService(w http.ResponseWriter, r *http.Request) {
 			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userExistService", "", err.Error())
 			SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		}
-	}(userServiceConnect)
-	client := protobufs.NewUserClient(userServiceConnect)
+	}(connection)
+	client := protobufs.NewUserClient(connection)
 
+	values, _, _ := GetFormData(r)
+	checkExistUsername := values["username"][0]
 	// send request
 	response, err := client.UserExist(context.Background(), &protobufs.RequestExistUser{Username: checkExistUsername})
 

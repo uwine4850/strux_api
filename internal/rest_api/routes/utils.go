@@ -73,3 +73,23 @@ func ConnectToUserService() (*grpc.ClientConn, error) {
 	conn, err := grpc.Dial(config.UserServiceAddress, opts...)
 	return conn, err
 }
+
+// CheckFormKeyAndGetUserServiceConnection a frequently used template is placed in a separate function.
+// Checks if the key is in the form, and also resets the connection to the grpc service.
+func CheckFormKeyAndGetUserServiceConnection(w http.ResponseWriter, r *http.Request, keys []string) (*grpc.ClientConn, error) {
+	values, _, err := GetFormData(r)
+	if err != nil {
+		return nil, err
+	}
+	key, ok := CheckPostKeysExist(values, keys)
+	if !ok {
+		return nil, &ErrFormKeyNotExist{key}
+	}
+
+	// connect to user service
+	connection, err := ConnectToUserService()
+	if err != nil {
+		return nil, err
+	}
+	return connection, nil
+}
