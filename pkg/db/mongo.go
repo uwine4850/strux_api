@@ -98,3 +98,10 @@ func (do *DatabaseOperation) DeleteOneEntry(colName string, value string) (*mong
 	res, err := collection.DeleteOne(do.Ctx, filter)
 	return res, err
 }
+
+func (do *DatabaseOperation) FindOneAndUpdate(colName string, value string, newPassword interface{}) *mongo.SingleResult {
+	collection := do.Client.Database(do.DbName).Collection(do.CollectionName)
+	filter := bson.D{{colName, value}}
+	res := collection.FindOneAndUpdate(do.Ctx, filter, newPassword)
+	return res
+}

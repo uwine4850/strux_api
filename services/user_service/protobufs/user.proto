@@ -8,6 +8,7 @@ service User {
   rpc CreateUser(RequestCreateUser) returns (BaseResponse) {}
   rpc UserExist(RequestExistUser) returns (BaseResponse) {}
   rpc UserDelete(RequestDeleteUser) returns (BaseResponse) {}
+  rpc UserUpdatePassword(RequestUpdatePassword) returns (BaseResponse) {}
 }
 
 message RequestCreateUser {
@@ -22,6 +23,12 @@ message RequestExistUser {
 message RequestDeleteUser {
   string Username = 1;
   string Password = 2;
+}
+
+message RequestUpdatePassword{
+  string Username = 1;
+  string Password = 2;
+  string NewPassword = 3;
 }
 
 enum ResponseStatus{

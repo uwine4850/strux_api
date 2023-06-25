@@ -19,6 +19,7 @@ func UsersInit() *chi.Mux {
 	r.Post("/create-user/", createUserService)
 	r.Get("/user-exist/", userExistService)
 	r.Delete("/user-delete/", userDeleteService)
+	r.Put("/user-password-update/", userPasswordUpdateService)
 	return r
 }
 
@@ -203,5 +204,45 @@ func userDeleteService(w http.ResponseWriter, r *http.Request) {
 	err = CreateResponse(w, http.StatusOK, response)
 	if err != nil {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userExistService", "", err.Error())
+	}
+}
+
+func userPasswordUpdateService(w http.ResponseWriter, r *http.Request) {
+	// connect to user service and check form keys
+	connection, err := CheckFormKeyAndGetUserServiceConnection(w, r, []string{"username", "password", "newPassword"})
+	if err != nil {
+		if reflect.DeepEqual(err, ErrFormKeyNotExist{}) {
+			logging.CreateLog(config.APILogFileName, logrus.WarnLevel, "routes", "userPasswordUpdateService", "", err.Error())
+		} else {
+			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userPasswordUpdateService", "", err.Error())
+		}
+		SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer func(connection *grpc.ClientConn) {
+		err := connection.Close()
+		if err != nil {
+			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userPasswordUpdateService", "", err.Error())
+			SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		}
+	}(connection)
+
+	// get form data
+	values, _, _ := GetFormData(r)
+
+	client := protobufs.NewUserClient(connection)
+	request := &protobufs.RequestUpdatePassword{
+		Username:    values["username"][0],
+		Password:    values["password"][0],
+		NewPassword: values["newPassword"][0],
+	}
+	response, err := client.UserUpdatePassword(context.Background(), request)
+	if err != nil {
+		logging.CreateLog(config.APILogFileName, logrus.WarnLevel, "routes", "userPasswordUpdateService", "", err.Error())
+		SendResponseError(w, err.Error(), http.StatusInternalServerError)
+	}
+	err = CreateResponse(w, http.StatusOK, response)
+	if err != nil {
+		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userPasswordUpdateService", "", err.Error())
 	}
 }

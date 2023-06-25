@@ -45,3 +45,8 @@ func (s *server) UserDelete(c context.Context, request *protobufs.RequestDeleteU
 	resp := internal.UserDelete(request.Username, request.Password)
 	return resp, nil
 }
+
+func (s *server) UserUpdatePassword(c context.Context, request *protobufs.RequestUpdatePassword) (*protobufs.BaseResponse, error) {
+	resp := internal.PasswordUpdate(request.Username, request.Password, request.NewPassword)
+	return resp, nil
+}

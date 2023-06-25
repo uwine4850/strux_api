@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 	"strux_api/internal/config"
 	"strux_api/pkg/db"
 	"strux_api/pkg/logging"
@@ -52,4 +53,13 @@ func GetDbClientConnection() (*mongo.Client, context.Context, *protobufs.BaseRes
 		return nil, nil, SendResponseError(err.Error())
 	}
 	return clientConnect, ctx, nil
+}
+
+func HashPassword(password string) ([]byte, *protobufs.BaseResponse) {
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "CreateUser", "", err.Error())
+		return nil, SendResponseError(err.Error())
+	}
+	return passwordHash, nil
 }

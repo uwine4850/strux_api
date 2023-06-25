@@ -25,6 +25,7 @@ type UserClient interface {
 	CreateUser(ctx context.Context, in *RequestCreateUser, opts ...grpc.CallOption) (*BaseResponse, error)
 	UserExist(ctx context.Context, in *RequestExistUser, opts ...grpc.CallOption) (*BaseResponse, error)
 	UserDelete(ctx context.Context, in *RequestDeleteUser, opts ...grpc.CallOption) (*BaseResponse, error)
+	UserUpdatePassword(ctx context.Context, in *RequestUpdatePassword, opts ...grpc.CallOption) (*BaseResponse, error)
 }
 
 type userClient struct {
@@ -62,6 +63,15 @@ func (c *userClient) UserDelete(ctx context.Context, in *RequestDeleteUser, opts
 	return out, nil
 }
 
+func (c *userClient) UserUpdatePassword(ctx context.Context, in *RequestUpdatePassword, opts ...grpc.CallOption) (*BaseResponse, error) {
+	out := new(BaseResponse)
+	err := c.cc.Invoke(ctx, "/protobufs.User/UserUpdatePassword", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServer is the server API for User service.
 // All implementations must embed UnimplementedUserServer
 // for forward compatibility
@@ -69,6 +79,7 @@ type UserServer interface {
 	CreateUser(context.Context, *RequestCreateUser) (*BaseResponse, error)
 	UserExist(context.Context, *RequestExistUser) (*BaseResponse, error)
 	UserDelete(context.Context, *RequestDeleteUser) (*BaseResponse, error)
+	UserUpdatePassword(context.Context, *RequestUpdatePassword) (*BaseResponse, error)
 	mustEmbedUnimplementedUserServer()
 }
 
@@ -84,6 +95,9 @@ func (UnimplementedUserServer) UserExist(context.Context, *RequestExistUser) (*B
 }
 func (UnimplementedUserServer) UserDelete(context.Context, *RequestDeleteUser) (*BaseResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserDelete not implemented")
+}
+func (UnimplementedUserServer) UserUpdatePassword(context.Context, *RequestUpdatePassword) (*BaseResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UserUpdatePassword not implemented")
 }
 func (UnimplementedUserServer) mustEmbedUnimplementedUserServer() {}
 
@@ -152,6 +166,24 @@ func _User_UserDelete_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _User_UserUpdatePassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestUpdatePassword)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).UserUpdatePassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protobufs.User/UserUpdatePassword",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).UserUpdatePassword(ctx, req.(*RequestUpdatePassword))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // User_ServiceDesc is the grpc.ServiceDesc for User service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -170,6 +202,10 @@ var User_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UserDelete",
 			Handler:    _User_UserDelete_Handler,
+		},
+		{
+			MethodName: "UserUpdatePassword",
+			Handler:    _User_UserUpdatePassword_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
