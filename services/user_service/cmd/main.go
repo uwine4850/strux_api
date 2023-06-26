@@ -50,3 +50,8 @@ func (s *server) UserUpdatePassword(c context.Context, request *protobufs.Reques
 	resp := internal.PasswordUpdate(request.Username, request.Password, request.NewPassword)
 	return resp, nil
 }
+
+func (s *server) UserLogIn(c context.Context, request *protobufs.RequestUserLogIn) (*protobufs.BaseResponse, error) {
+	resp := internal.UserLogIn(request.Username, request.Password)
+	return resp, nil
+}

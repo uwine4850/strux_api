@@ -1,52 +1,43 @@
-package routes
+package users
 
 import (
 	"context"
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"net/http"
 	"reflect"
 	"strux_api/internal/config"
+	"strux_api/internal/rest_api/routes/errors"
+	"strux_api/internal/rest_api/routes/utils"
 	"strux_api/pkg/logging"
 	"strux_api/services/user_service/protobufs"
 )
 
-func UsersInit() *chi.Mux {
-	r := chi.NewRouter()
-
-	r.Post("/create-user/", createUserService)
-	r.Get("/user-exist/", userExistService)
-	r.Delete("/user-delete/", userDeleteService)
-	r.Put("/user-password-update/", userPasswordUpdateService)
-	return r
-}
-
-// createUserService The function connects to the microservice responsible for operations with users and will send
+// CreateUserService The function connects to the microservice responsible for operations with users and will send
 // a request to create a new user.
 // In this case, the answer is either various kinds of errors, or messages about the correct completion of the operation.
-func createUserService(w http.ResponseWriter, r *http.Request) {
-	connection, err := CheckFormKeyAndGetUserServiceConnection(w, r, []string{"username", "password"})
+func CreateUserService(w http.ResponseWriter, r *http.Request) {
+	connection, err := utils.CheckFormKeyAndGetUserServiceConnection(w, r, []string{"username", "password"})
 	if err != nil {
-		if reflect.DeepEqual(err, ErrFormKeyNotExist{}) {
+		if reflect.DeepEqual(err, errors.ErrFormKeyNotExist{}) {
 			logging.CreateLog(config.APILogFileName, logrus.WarnLevel, "routes", "createUserService", "", err.Error())
 		} else {
 			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "createUserService", "", err.Error())
 		}
-		SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer func(connection *grpc.ClientConn) {
 		err := connection.Close()
 		if err != nil {
 			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "createUserService", "", err.Error())
-			SendResponseError(w, err.Error(), http.StatusInternalServerError)
+			utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		}
 	}(connection)
 	client := protobufs.NewUserClient(connection)
 
-	values, _, _ := GetFormData(r)
+	values, _, _ := utils.GetFormData(r)
 	// send request and processing response
 	request := &protobufs.RequestCreateUser{
 		Username: values["username"][0],
@@ -57,7 +48,7 @@ func createUserService(w http.ResponseWriter, r *http.Request) {
 	// catch errors and send response
 	if err != nil {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "createUserService", "", err.Error())
-		SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -65,7 +56,7 @@ func createUserService(w http.ResponseWriter, r *http.Request) {
 	if !response.Success {
 		// if user already exist
 		if response.Status[0] != protobufs.ResponseStatus_StatusError {
-			err := CreateResponse(w, http.StatusOK, response)
+			err := utils.CreateResponse(w, http.StatusOK, response)
 			if err != nil {
 				logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "createUserService", "", err.Error())
 				resp := &protobufs.BaseResponse{
@@ -87,11 +78,11 @@ func createUserService(w http.ResponseWriter, r *http.Request) {
 			return
 			//	if some error
 		} else {
-			SendResponseError(w, response.Message, http.StatusInternalServerError)
+			utils.SendResponseError(w, response.Message, http.StatusInternalServerError)
 		}
 		// if user successfully created
 	} else {
-		err := CreateResponse(w, http.StatusCreated, response)
+		err := utils.CreateResponse(w, http.StatusCreated, response)
 		if err != nil {
 			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "createUserService", "", err.Error())
 			resp := &protobufs.BaseResponse{
@@ -113,28 +104,28 @@ func createUserService(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// userExistService sends a user existence request to the user service.
-func userExistService(w http.ResponseWriter, r *http.Request) {
-	connection, err := CheckFormKeyAndGetUserServiceConnection(w, r, []string{"username"})
+// UserExistService sends a user existence request to the user service.
+func UserExistService(w http.ResponseWriter, r *http.Request) {
+	connection, err := utils.CheckFormKeyAndGetUserServiceConnection(w, r, []string{"username"})
 	if err != nil {
-		if reflect.DeepEqual(err, ErrFormKeyNotExist{}) {
+		if reflect.DeepEqual(err, errors.ErrFormKeyNotExist{}) {
 			logging.CreateLog(config.APILogFileName, logrus.WarnLevel, "routes", "userExistService", "", err.Error())
 		} else {
 			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userExistService", "", err.Error())
 		}
-		SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer func(userServiceConnect *grpc.ClientConn) {
 		err := userServiceConnect.Close()
 		if err != nil {
 			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userExistService", "", err.Error())
-			SendResponseError(w, err.Error(), http.StatusInternalServerError)
+			utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		}
 	}(connection)
 	client := protobufs.NewUserClient(connection)
 
-	values, _, _ := GetFormData(r)
+	values, _, _ := utils.GetFormData(r)
 	checkExistUsername := values["username"][0]
 	// send request
 	response, err := client.UserExist(context.Background(), &protobufs.RequestExistUser{Username: checkExistUsername})
@@ -142,46 +133,46 @@ func userExistService(w http.ResponseWriter, r *http.Request) {
 	// catch errors and send response
 	if err != nil {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userExistService", "", err.Error())
-		SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	// processing error
 	if response.Status[0] == protobufs.ResponseStatus_StatusError {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userExistService", "", response.Message)
-		SendResponseError(w, response.Message, http.StatusInternalServerError)
+		utils.SendResponseError(w, response.Message, http.StatusInternalServerError)
 		return
 	}
 
 	// No errors found, return user existence response.
-	err = CreateResponse(w, http.StatusOK, response)
+	err = utils.CreateResponse(w, http.StatusOK, response)
 	if err != nil {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userExistService", "", err.Error())
 	}
 }
 
-func userDeleteService(w http.ResponseWriter, r *http.Request) {
+func UserDeleteService(w http.ResponseWriter, r *http.Request) {
 	// connect to user service and check form keys
-	connection, err := CheckFormKeyAndGetUserServiceConnection(w, r, []string{"username", "password"})
+	connection, err := utils.CheckFormKeyAndGetUserServiceConnection(w, r, []string{"username", "password"})
 	if err != nil {
-		if reflect.DeepEqual(err, ErrFormKeyNotExist{}) {
+		if reflect.DeepEqual(err, errors.ErrFormKeyNotExist{}) {
 			logging.CreateLog(config.APILogFileName, logrus.WarnLevel, "routes", "userDeleteService", "", err.Error())
 		} else {
 			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userDeleteService", "", err.Error())
 		}
-		SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer func(connection *grpc.ClientConn) {
 		err := connection.Close()
 		if err != nil {
 			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userDeleteService", "", err.Error())
-			SendResponseError(w, err.Error(), http.StatusInternalServerError)
+			utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		}
 	}(connection)
 
 	// get form data
-	values, _, _ := GetFormData(r)
+	values, _, _ := utils.GetFormData(r)
 
 	// exec and processing UserDelete function
 	client := protobufs.NewUserClient(connection)
@@ -191,44 +182,44 @@ func userDeleteService(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userDeleteService", "", err.Error())
-		SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if response.Status[0] == protobufs.ResponseStatus_StatusError {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userDeleteService", "", response.Message)
-		SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		utils.SendResponseError(w, response.Message, http.StatusInternalServerError)
 		return
 	}
 
 	// No errors found, return user existence response.
-	err = CreateResponse(w, http.StatusOK, response)
+	err = utils.CreateResponse(w, http.StatusOK, response)
 	if err != nil {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userExistService", "", err.Error())
 	}
 }
 
-func userPasswordUpdateService(w http.ResponseWriter, r *http.Request) {
+func UserPasswordUpdateService(w http.ResponseWriter, r *http.Request) {
 	// connect to user service and check form keys
-	connection, err := CheckFormKeyAndGetUserServiceConnection(w, r, []string{"username", "password", "newPassword"})
+	connection, err := utils.CheckFormKeyAndGetUserServiceConnection(w, r, []string{"username", "password", "newPassword"})
 	if err != nil {
-		if reflect.DeepEqual(err, ErrFormKeyNotExist{}) {
+		if reflect.DeepEqual(err, errors.ErrFormKeyNotExist{}) {
 			logging.CreateLog(config.APILogFileName, logrus.WarnLevel, "routes", "userPasswordUpdateService", "", err.Error())
 		} else {
 			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userPasswordUpdateService", "", err.Error())
 		}
-		SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer func(connection *grpc.ClientConn) {
 		err := connection.Close()
 		if err != nil {
 			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userPasswordUpdateService", "", err.Error())
-			SendResponseError(w, err.Error(), http.StatusInternalServerError)
+			utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		}
 	}(connection)
 
 	// get form data
-	values, _, _ := GetFormData(r)
+	values, _, _ := utils.GetFormData(r)
 
 	client := protobufs.NewUserClient(connection)
 	request := &protobufs.RequestUpdatePassword{
@@ -237,12 +228,62 @@ func userPasswordUpdateService(w http.ResponseWriter, r *http.Request) {
 		NewPassword: values["newPassword"][0],
 	}
 	response, err := client.UserUpdatePassword(context.Background(), request)
+	if response.Status[0] == protobufs.ResponseStatus_StatusError {
+		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userPasswordUpdateService", "", response.Message)
+		utils.SendResponseError(w, response.Message, http.StatusInternalServerError)
+		return
+	}
 	if err != nil {
 		logging.CreateLog(config.APILogFileName, logrus.WarnLevel, "routes", "userPasswordUpdateService", "", err.Error())
-		SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	err = CreateResponse(w, http.StatusOK, response)
+	err = utils.CreateResponse(w, http.StatusOK, response)
 	if err != nil {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userPasswordUpdateService", "", err.Error())
+	}
+}
+
+func UserLogInService(w http.ResponseWriter, r *http.Request) {
+	connection, err := utils.CheckFormKeyAndGetUserServiceConnection(w, r, []string{"username", "password"})
+	if err != nil {
+		if reflect.DeepEqual(err, errors.ErrFormKeyNotExist{}) {
+			logging.CreateLog(config.APILogFileName, logrus.WarnLevel, "routes", "UserLogInService", "", err.Error())
+		} else {
+			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "UserLogInService", "", err.Error())
+		}
+		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer func(connection *grpc.ClientConn) {
+		err := connection.Close()
+		if err != nil {
+			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "UserLogInService", "", err.Error())
+			utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		}
+	}(connection)
+
+	values, _, _ := utils.GetFormData(r)
+
+	client := protobufs.NewUserClient(connection)
+	request := &protobufs.RequestUserLogIn{
+		Username: values["username"][0],
+		Password: values["password"][0],
+	}
+	response, err := client.UserLogIn(context.Background(), request)
+
+	if response.Status[0] == protobufs.ResponseStatus_StatusError {
+		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "UserLogInService", "", response.Message)
+		utils.SendResponseError(w, response.Message, http.StatusInternalServerError)
+		return
+	}
+	if err != nil {
+		logging.CreateLog(config.APILogFileName, logrus.WarnLevel, "routes", "UserLogInService", "", err.Error())
+		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = utils.CreateResponse(w, http.StatusOK, response)
+	if err != nil {
+		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "UserLogInService", "", err.Error())
 	}
 }

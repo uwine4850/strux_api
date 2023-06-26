@@ -1,24 +1,25 @@
-package routes
+package utils
 
 import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	"mime/multipart"
 	"net/http"
 	"strux_api/internal/config"
+	"strux_api/internal/rest_api/routes/errors"
 	"strux_api/pkg/logging"
 	"strux_api/services/user_service/protobufs"
 )
 
 // CreateResponse Creates and sends a response to the client
-func CreateResponse(w http.ResponseWriter, httpStatus int, response *protobufs.BaseResponse) error {
+func CreateResponse(w http.ResponseWriter, httpStatus int, response proto.Message) error {
 	w.WriteHeader(httpStatus)
 	w.Header().Set("Content-Type", "application/json")
 	jm := protojson.MarshalOptions{EmitUnpopulated: true}
 	jsonResp, err := jm.Marshal(response)
-	//jsonResp, err := json.Marshal(response)
 	if err != nil {
 		return err
 	}
@@ -65,12 +66,36 @@ func CheckPostKeysExist(values map[string][]string, keys []string) (string, bool
 	return "", true
 }
 
+func CheckPostFilesKeysExist(values map[string][]*multipart.FileHeader, keys []string) (string, bool) {
+	for i := 0; i < len(keys); i++ {
+		exist := false
+		for s, _ := range values {
+			if s == keys[i] {
+				exist = true
+			}
+		}
+		if !exist {
+			return keys[i], false
+		}
+	}
+	return "", true
+}
+
 // ConnectToUserService Connecting to the user microservice.
 func ConnectToUserService() (*grpc.ClientConn, error) {
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 	conn, err := grpc.Dial(config.UserServiceAddress, opts...)
+	return conn, err
+}
+
+// ConnectToPackageService Connecting to the user microservice.
+func ConnectToPackageService() (*grpc.ClientConn, error) {
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+	conn, err := grpc.Dial(config.PkgServiceAddress, opts...)
 	return conn, err
 }
 
@@ -83,11 +108,31 @@ func CheckFormKeyAndGetUserServiceConnection(w http.ResponseWriter, r *http.Requ
 	}
 	key, ok := CheckPostKeysExist(values, keys)
 	if !ok {
-		return nil, &ErrFormKeyNotExist{key}
+		return nil, &errors.ErrFormKeyNotExist{KeyName: key}
 	}
 
 	// connect to user service
 	connection, err := ConnectToUserService()
+	if err != nil {
+		return nil, err
+	}
+	return connection, nil
+}
+
+// CheckFormKeyAndGetPackageServiceConnection a frequently used template is placed in a separate function.
+// Checks if the key is in the form, and also resets the connection to the grpc service.
+func CheckFormKeyAndGetPackageServiceConnection(w http.ResponseWriter, r *http.Request, keys []string) (*grpc.ClientConn, error) {
+	_, files, err := GetFormData(r)
+	if err != nil {
+		return nil, err
+	}
+	key, ok := CheckPostFilesKeysExist(files, keys)
+	if !ok {
+		return nil, &errors.ErrFormKeyNotExist{KeyName: key}
+	}
+
+	// connect to user service
+	connection, err := ConnectToPackageService()
 	if err != nil {
 		return nil, err
 	}
