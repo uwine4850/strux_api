@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package baseproto;
+
+option go_package = "strux_api/services/protofiles/baseproto";
+
+enum ResponseStatus{
+  StatusError = 0;
+  StatusOk = 1;
+}
+
+message BaseResponse {
+  string message = 1;
+  bool success = 2;
+  ResponseStatus status = 3;
+}

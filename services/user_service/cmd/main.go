@@ -6,8 +6,9 @@ import (
 	"google.golang.org/grpc/grpclog"
 	"net"
 	"strux_api/internal/config"
+	"strux_api/services/protofiles/baseproto"
+	"strux_api/services/protofiles/userproto"
 	"strux_api/services/user_service/internal"
-	protobufs "strux_api/services/user_service/protobufs"
 )
 
 func main() {
@@ -20,7 +21,7 @@ func main() {
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 
-	protobufs.RegisterUserServer(grpcServer, &server{})
+	userproto.RegisterUserServer(grpcServer, &server{})
 	err = grpcServer.Serve(listener)
 	if err != nil {
 		panic(err)
@@ -28,30 +29,30 @@ func main() {
 }
 
 type server struct {
-	protobufs.UnimplementedUserServer
+	userproto.UnimplementedUserServer
 }
 
-func (s *server) CreateUser(c context.Context, request *protobufs.RequestCreateUser) (*protobufs.BaseResponse, error) {
+func (s *server) CreateUser(c context.Context, request *userproto.RequestCreateUser) (*baseproto.BaseResponse, error) {
 	resp := internal.CreateUser(request.Username, request.Password)
 	return resp, nil
 }
 
-func (s *server) UserExist(c context.Context, request *protobufs.RequestExistUser) (*protobufs.BaseResponse, error) {
+func (s *server) UserExist(c context.Context, request *userproto.RequestExistUser) (*baseproto.BaseResponse, error) {
 	resp := internal.UserExist(request.Username)
 	return resp, nil
 }
 
-func (s *server) UserDelete(c context.Context, request *protobufs.RequestDeleteUser) (*protobufs.BaseResponse, error) {
+func (s *server) UserDelete(c context.Context, request *userproto.RequestDeleteUser) (*baseproto.BaseResponse, error) {
 	resp := internal.UserDelete(request.Username, request.Password)
 	return resp, nil
 }
 
-func (s *server) UserUpdatePassword(c context.Context, request *protobufs.RequestUpdatePassword) (*protobufs.BaseResponse, error) {
+func (s *server) UserUpdatePassword(c context.Context, request *userproto.RequestUpdatePassword) (*baseproto.BaseResponse, error) {
 	resp := internal.PasswordUpdate(request.Username, request.Password, request.NewPassword)
 	return resp, nil
 }
 
-func (s *server) UserLogIn(c context.Context, request *protobufs.RequestUserLogIn) (*protobufs.BaseResponse, error) {
+func (s *server) UserLogIn(c context.Context, request *userproto.RequestUserLogIn) (*baseproto.BaseResponse, error) {
 	resp := internal.UserLogIn(request.Username, request.Password)
 	return resp, nil
 }

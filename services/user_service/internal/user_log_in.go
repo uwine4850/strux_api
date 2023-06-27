@@ -9,10 +9,10 @@ import (
 	"strux_api/internal/config"
 	"strux_api/internal/config/schema"
 	"strux_api/pkg/logging"
-	"strux_api/services/user_service/protobufs"
+	"strux_api/services/protofiles/baseproto"
 )
 
-func UserLogIn(username string, password string) *protobufs.BaseResponse {
+func UserLogIn(username string, password string) *baseproto.BaseResponse {
 	// connect to database
 	clientConnection, ctx, errResponse := GetDbClientConnection()
 	if errResponse != nil {
@@ -32,16 +32,16 @@ func UserLogIn(username string, password string) *protobufs.BaseResponse {
 	err := operation.FindOneByValue("username", username, &user)
 	if err != nil {
 		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "UserLogIn", "", err.Error())
-		SendResponseError(err.Error())
+		return SendResponseError(err.Error())
 	}
 
 	if user.Username != "" {
 		err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 		if err == bcrypt.ErrMismatchedHashAndPassword {
-			resp := &protobufs.BaseResponse{
+			resp := &baseproto.BaseResponse{
 				Message: "Password mismatch.",
 				Success: false,
-				Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
+				Status:  baseproto.ResponseStatus_StatusOk,
 			}
 			return resp
 		}
@@ -49,18 +49,18 @@ func UserLogIn(username string, password string) *protobufs.BaseResponse {
 			logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "PasswordUpdate", "", err.Error())
 			return SendResponseError(err.Error())
 		}
-		resp := &protobufs.BaseResponse{
+		resp := &baseproto.BaseResponse{
 			Message: "OK",
 			Success: true,
-			Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
+			Status:  baseproto.ResponseStatus_StatusOk,
 		}
 		return resp
 	} else {
 		// user not exist
-		resp := &protobufs.BaseResponse{
+		resp := &baseproto.BaseResponse{
 			Message: fmt.Sprintf("User %s not exist.", username),
 			Success: false,
-			Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
+			Status:  baseproto.ResponseStatus_StatusOk,
 		}
 		return resp
 	}

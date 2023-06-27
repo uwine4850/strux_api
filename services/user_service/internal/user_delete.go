@@ -9,10 +9,10 @@ import (
 	"strux_api/internal/config"
 	"strux_api/internal/config/schema"
 	"strux_api/pkg/logging"
-	"strux_api/services/user_service/protobufs"
+	"strux_api/services/protofiles/baseproto"
 )
 
-func UserDelete(username string, password string) *protobufs.BaseResponse {
+func UserDelete(username string, password string) *baseproto.BaseResponse {
 	// connect to database
 	clientConnection, ctx, errResponse := GetDbClientConnection()
 	if errResponse != nil {
@@ -40,10 +40,10 @@ func UserDelete(username string, password string) *protobufs.BaseResponse {
 		// check password match
 		err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 		if err == bcrypt.ErrMismatchedHashAndPassword {
-			resp := &protobufs.BaseResponse{
+			resp := &baseproto.BaseResponse{
 				Message: "Password mismatch.",
 				Success: false,
-				Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
+				Status:  baseproto.ResponseStatus_StatusOk,
 			}
 			return resp
 		}
@@ -57,19 +57,19 @@ func UserDelete(username string, password string) *protobufs.BaseResponse {
 			logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "UserDelete", "", err.Error())
 			return SendResponseError(err.Error())
 		} else {
-			resp := &protobufs.BaseResponse{
+			resp := &baseproto.BaseResponse{
 				Message: fmt.Sprintf("User %s deleted.", username),
 				Success: true,
-				Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
+				Status:  baseproto.ResponseStatus_StatusOk,
 			}
 			return resp
 		}
 	} else {
 		// user not exist
-		resp := &protobufs.BaseResponse{
+		resp := &baseproto.BaseResponse{
 			Message: fmt.Sprintf("User %s not exist.", username),
 			Success: false,
-			Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
+			Status:  baseproto.ResponseStatus_StatusOk,
 		}
 		return resp
 	}

@@ -10,15 +10,15 @@ import (
 	"strux_api/internal/config"
 	"strux_api/internal/config/schema"
 	"strux_api/pkg/logging"
-	"strux_api/services/user_service/protobufs"
+	"strux_api/services/protofiles/baseproto"
 )
 
-func PasswordUpdate(username string, password string, newPassword string) *protobufs.BaseResponse {
+func PasswordUpdate(username string, password string, newPassword string) *baseproto.BaseResponse {
 	if password == newPassword {
-		resp := &protobufs.BaseResponse{
+		resp := &baseproto.BaseResponse{
 			Message: "The old and new passwords are the same.",
 			Success: false,
-			Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
+			Status:  baseproto.ResponseStatus_StatusOk,
 		}
 		return resp
 	}
@@ -57,10 +57,10 @@ func PasswordUpdate(username string, password string, newPassword string) *proto
 		// check password match
 		err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 		if err == bcrypt.ErrMismatchedHashAndPassword {
-			resp := &protobufs.BaseResponse{
+			resp := &baseproto.BaseResponse{
 				Message: "Old password mismatch.",
 				Success: false,
-				Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
+				Status:  baseproto.ResponseStatus_StatusOk,
 			}
 			return resp
 		}
@@ -70,10 +70,10 @@ func PasswordUpdate(username string, password string, newPassword string) *proto
 		}
 	} else {
 		// user not exist
-		resp := &protobufs.BaseResponse{
+		resp := &baseproto.BaseResponse{
 			Message: fmt.Sprintf("User %s not exist.", username),
 			Success: false,
-			Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
+			Status:  baseproto.ResponseStatus_StatusOk,
 		}
 		return resp
 	}
@@ -90,10 +90,10 @@ func PasswordUpdate(username string, password string, newPassword string) *proto
 		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "PasswordUpdate", "", err.Error())
 		return SendResponseError(err.Error())
 	}
-	resp := &protobufs.BaseResponse{
+	resp := &baseproto.BaseResponse{
 		Message: "Password updated.",
 		Success: true,
-		Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
+		Status:  baseproto.ResponseStatus_StatusOk,
 	}
 	return resp
 }

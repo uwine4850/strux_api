@@ -10,11 +10,11 @@ import (
 	"strux_api/internal/config/schema"
 	"strux_api/pkg/db"
 	"strux_api/pkg/logging"
-	"strux_api/services/user_service/protobufs"
+	"strux_api/services/protofiles/baseproto"
 )
 
 // CreateUser Adding a new user to the database if it was not previously found
-func CreateUser(username string, password string) *protobufs.BaseResponse {
+func CreateUser(username string, password string) *baseproto.BaseResponse {
 	// connect to database
 	clientConnection, ctx, errResponse := GetDbClientConnection()
 	if errResponse != nil {
@@ -41,10 +41,10 @@ func CreateUser(username string, password string) *protobufs.BaseResponse {
 	// add user
 	if user.Username != "" {
 		msg := fmt.Sprintf("User %s already exist.", user.Username)
-		resp := &protobufs.BaseResponse{
+		resp := &baseproto.BaseResponse{
 			Message: msg,
 			Success: false,
-			Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
+			Status:  baseproto.ResponseStatus_StatusOk,
 		}
 		return resp
 	} else {
@@ -64,9 +64,9 @@ func CreateUser(username string, password string) *protobufs.BaseResponse {
 			logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "CreateUser", "", err.Error())
 			return SendResponseError(err.Error())
 		} else {
-			resp := &protobufs.BaseResponse{
+			resp := &baseproto.BaseResponse{
 				Message: fmt.Sprintf("User %s created successfuly.", username),
-				Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
+				Status:  baseproto.ResponseStatus_StatusOk,
 				Success: true,
 			}
 			return resp

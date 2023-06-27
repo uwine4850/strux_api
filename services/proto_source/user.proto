@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package userproto;
+
+option go_package = "strux_api/services/protofiles/userproto";
+import "base_proto.proto";
+
+service User {
+  rpc CreateUser(RequestCreateUser) returns (baseproto.BaseResponse) {}
+  rpc UserExist(RequestExistUser) returns (baseproto.BaseResponse) {}
+  rpc UserDelete(RequestDeleteUser) returns (baseproto.BaseResponse) {}
+  rpc UserUpdatePassword(RequestUpdatePassword) returns (baseproto.BaseResponse) {}
+  rpc UserLogIn(RequestUserLogIn) returns (baseproto.BaseResponse) {}
+}
+
+message RequestCreateUser {
+  string Username = 1;
+  string Password = 2;
+}
+
+message RequestExistUser {
+  string Username = 1;
+}
+
+message RequestDeleteUser {
+  string Username = 1;
+  string Password = 2;
+}
+
+message RequestUpdatePassword{
+  string Username = 1;
+  string Password = 2;
+  string NewPassword = 3;
+}
+
+message RequestUserLogIn{
+  string Username = 1;
+  string Password = 2;
+}

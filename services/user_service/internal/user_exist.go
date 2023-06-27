@@ -7,12 +7,12 @@ import (
 	"strux_api/internal/config"
 	"strux_api/internal/config/schema"
 	"strux_api/pkg/logging"
-	"strux_api/services/user_service/protobufs"
+	"strux_api/services/protofiles/baseproto"
 )
 
 // UserExist checks if the selected username exists in the database.
 // If no errors occur during the check (see status), success: true means that the user was found, and false is not found.
-func UserExist(username string) *protobufs.BaseResponse {
+func UserExist(username string) *baseproto.BaseResponse {
 	// connect to database
 	clientConnection, ctx, errResponse := GetDbClientConnection()
 	if errResponse != nil {
@@ -36,18 +36,18 @@ func UserExist(username string) *protobufs.BaseResponse {
 	}
 	// user exist
 	if user.Username != "" {
-		resp := &protobufs.BaseResponse{
+		resp := &baseproto.BaseResponse{
 			Message: "Exist",
 			Success: true,
-			Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
+			Status:  baseproto.ResponseStatus_StatusOk,
 		}
 		return resp
 		//	user not exist
 	} else {
-		resp := &protobufs.BaseResponse{
+		resp := &baseproto.BaseResponse{
 			Message: "Not exist",
 			Success: false,
-			Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusOk},
+			Status:  baseproto.ResponseStatus_StatusOk,
 		}
 		return resp
 	}

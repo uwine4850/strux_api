@@ -11,7 +11,7 @@ import (
 	"strux_api/internal/config"
 	"strux_api/internal/rest_api/routes/errors"
 	"strux_api/pkg/logging"
-	"strux_api/services/user_service/protobufs"
+	"strux_api/services/protofiles/baseproto"
 )
 
 // CreateResponse Creates and sends a response to the client
@@ -38,10 +38,10 @@ func GetFormData(r *http.Request) (map[string][]string, map[string][]*multipart.
 
 // SendResponseError Returns an error response
 func SendResponseError(w http.ResponseWriter, errText string, httpStatus int) {
-	resp := &protobufs.BaseResponse{
+	resp := &baseproto.BaseResponse{
 		Message: errText,
 		Success: false,
-		Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusError},
+		Status:  baseproto.ResponseStatus_StatusError,
 	}
 	err := CreateResponse(w, http.StatusInternalServerError, resp)
 	if err != nil {
@@ -121,12 +121,17 @@ func CheckFormKeyAndGetUserServiceConnection(w http.ResponseWriter, r *http.Requ
 
 // CheckFormKeyAndGetPackageServiceConnection a frequently used template is placed in a separate function.
 // Checks if the key is in the form, and also resets the connection to the grpc service.
-func CheckFormKeyAndGetPackageServiceConnection(w http.ResponseWriter, r *http.Request, keys []string) (*grpc.ClientConn, error) {
-	_, files, err := GetFormData(r)
+func CheckFormKeyAndGetPackageServiceConnection(w http.ResponseWriter, r *http.Request, filesKeys []string, valuesKeys []string) (*grpc.ClientConn, error) {
+	values, files, err := GetFormData(r)
 	if err != nil {
 		return nil, err
 	}
-	key, ok := CheckPostFilesKeysExist(files, keys)
+	key, ok := CheckPostFilesKeysExist(files, filesKeys)
+	if !ok {
+		return nil, &errors.ErrFormKeyNotExist{KeyName: key}
+	}
+
+	key, ok = CheckPostKeysExist(values, valuesKeys)
 	if !ok {
 		return nil, &errors.ErrFormKeyNotExist{KeyName: key}
 	}

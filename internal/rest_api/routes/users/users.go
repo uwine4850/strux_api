@@ -11,7 +11,8 @@ import (
 	"strux_api/internal/rest_api/routes/errors"
 	"strux_api/internal/rest_api/routes/utils"
 	"strux_api/pkg/logging"
-	"strux_api/services/user_service/protobufs"
+	"strux_api/services/protofiles/baseproto"
+	"strux_api/services/protofiles/userproto"
 )
 
 // CreateUserService The function connects to the microservice responsible for operations with users and will send
@@ -35,11 +36,11 @@ func CreateUserService(w http.ResponseWriter, r *http.Request) {
 			utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		}
 	}(connection)
-	client := protobufs.NewUserClient(connection)
+	client := userproto.NewUserClient(connection)
 
 	values, _, _ := utils.GetFormData(r)
 	// send request and processing response
-	request := &protobufs.RequestCreateUser{
+	request := &userproto.RequestCreateUser{
 		Username: values["username"][0],
 		Password: values["password"][0],
 	}
@@ -55,14 +56,14 @@ func CreateUserService(w http.ResponseWriter, r *http.Request) {
 	// If the user is not created
 	if !response.Success {
 		// if user already exist
-		if response.Status[0] != protobufs.ResponseStatus_StatusError {
+		if response.Status != baseproto.ResponseStatus_StatusError {
 			err := utils.CreateResponse(w, http.StatusOK, response)
 			if err != nil {
 				logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "createUserService", "", err.Error())
-				resp := &protobufs.BaseResponse{
+				resp := &baseproto.BaseResponse{
 					Message: err.Error(),
 					Success: false,
-					Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusError},
+					Status:  baseproto.ResponseStatus_StatusError,
 				}
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Header().Set("Content-Type", "application/json")
@@ -85,10 +86,10 @@ func CreateUserService(w http.ResponseWriter, r *http.Request) {
 		err := utils.CreateResponse(w, http.StatusCreated, response)
 		if err != nil {
 			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "createUserService", "", err.Error())
-			resp := &protobufs.BaseResponse{
+			resp := &baseproto.BaseResponse{
 				Message: err.Error(),
 				Success: false,
-				Status:  []protobufs.ResponseStatus{protobufs.ResponseStatus_StatusError},
+				Status:  baseproto.ResponseStatus_StatusError,
 			}
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Header().Set("Content-Type", "application/json")
@@ -123,12 +124,12 @@ func UserExistService(w http.ResponseWriter, r *http.Request) {
 			utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		}
 	}(connection)
-	client := protobufs.NewUserClient(connection)
+	client := userproto.NewUserClient(connection)
 
 	values, _, _ := utils.GetFormData(r)
 	checkExistUsername := values["username"][0]
 	// send request
-	response, err := client.UserExist(context.Background(), &protobufs.RequestExistUser{Username: checkExistUsername})
+	response, err := client.UserExist(context.Background(), &userproto.RequestExistUser{Username: checkExistUsername})
 
 	// catch errors and send response
 	if err != nil {
@@ -138,7 +139,7 @@ func UserExistService(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// processing error
-	if response.Status[0] == protobufs.ResponseStatus_StatusError {
+	if response.Status == baseproto.ResponseStatus_StatusError {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userExistService", "", response.Message)
 		utils.SendResponseError(w, response.Message, http.StatusInternalServerError)
 		return
@@ -175,8 +176,8 @@ func UserDeleteService(w http.ResponseWriter, r *http.Request) {
 	values, _, _ := utils.GetFormData(r)
 
 	// exec and processing UserDelete function
-	client := protobufs.NewUserClient(connection)
-	response, err := client.UserDelete(context.Background(), &protobufs.RequestDeleteUser{
+	client := userproto.NewUserClient(connection)
+	response, err := client.UserDelete(context.Background(), &userproto.RequestDeleteUser{
 		Username: values["username"][0],
 		Password: values["password"][0],
 	})
@@ -185,7 +186,7 @@ func UserDeleteService(w http.ResponseWriter, r *http.Request) {
 		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if response.Status[0] == protobufs.ResponseStatus_StatusError {
+	if response.Status == baseproto.ResponseStatus_StatusError {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userDeleteService", "", response.Message)
 		utils.SendResponseError(w, response.Message, http.StatusInternalServerError)
 		return
@@ -221,14 +222,14 @@ func UserPasswordUpdateService(w http.ResponseWriter, r *http.Request) {
 	// get form data
 	values, _, _ := utils.GetFormData(r)
 
-	client := protobufs.NewUserClient(connection)
-	request := &protobufs.RequestUpdatePassword{
+	client := userproto.NewUserClient(connection)
+	request := &userproto.RequestUpdatePassword{
 		Username:    values["username"][0],
 		Password:    values["password"][0],
 		NewPassword: values["newPassword"][0],
 	}
 	response, err := client.UserUpdatePassword(context.Background(), request)
-	if response.Status[0] == protobufs.ResponseStatus_StatusError {
+	if response.Status == baseproto.ResponseStatus_StatusError {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userPasswordUpdateService", "", response.Message)
 		utils.SendResponseError(w, response.Message, http.StatusInternalServerError)
 		return
@@ -265,14 +266,14 @@ func UserLogInService(w http.ResponseWriter, r *http.Request) {
 
 	values, _, _ := utils.GetFormData(r)
 
-	client := protobufs.NewUserClient(connection)
-	request := &protobufs.RequestUserLogIn{
+	client := userproto.NewUserClient(connection)
+	request := &userproto.RequestUserLogIn{
 		Username: values["username"][0],
 		Password: values["password"][0],
 	}
 	response, err := client.UserLogIn(context.Background(), request)
 
-	if response.Status[0] == protobufs.ResponseStatus_StatusError {
+	if response.Status == baseproto.ResponseStatus_StatusError {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "UserLogInService", "", response.Message)
 		utils.SendResponseError(w, response.Message, http.StatusInternalServerError)
 		return
