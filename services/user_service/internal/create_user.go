@@ -11,12 +11,13 @@ import (
 	"strux_api/pkg/db"
 	"strux_api/pkg/logging"
 	"strux_api/services/protofiles/baseproto"
+	"strux_api/services/utils"
 )
 
 // CreateUser Adding a new user to the database if it was not previously found
 func CreateUser(username string, password string) *baseproto.BaseResponse {
 	// connect to database
-	clientConnection, ctx, errResponse := GetDbClientConnection()
+	clientConnection, ctx, errResponse := utils.GetDbClientConnection()
 	if errResponse != nil {
 		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "CreateUser", "", errResponse.Message)
 		return errResponse
@@ -32,10 +33,10 @@ func CreateUser(username string, password string) *baseproto.BaseResponse {
 	// get user
 	operation := GetUserOperation(clientConnection, ctx)
 	user := schema.User{}
-	resp, err := FindOneWitchResponse(operation, "username", username, &user)
+	resp, err := utils.FindOneWitchResponse(operation, "username", username, &user)
 	if err != nil {
 		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "CreateUser", "", err.Error())
-		return SendResponseError(resp.Message)
+		return utils.SendResponseError(resp.Message)
 	}
 
 	// add user
@@ -52,7 +53,7 @@ func CreateUser(username string, password string) *baseproto.BaseResponse {
 		passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), 4)
 		if err != nil {
 			logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "CreateUser", "", err.Error())
-			return SendResponseError(err.Error())
+			return utils.SendResponseError(err.Error())
 		}
 
 		_, err = operation.InsertOne(
@@ -62,7 +63,7 @@ func CreateUser(username string, password string) *baseproto.BaseResponse {
 			})
 		if err != nil {
 			logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "CreateUser", "", err.Error())
-			return SendResponseError(err.Error())
+			return utils.SendResponseError(err.Error())
 		} else {
 			resp := &baseproto.BaseResponse{
 				Message: fmt.Sprintf("User %s created successfuly.", username),

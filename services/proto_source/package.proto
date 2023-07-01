@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package pkgproto;
+option go_package = "strux_api/services/protofiles/pkgproto";
+
+import "base_proto.proto";
+
+service Package{
+  rpc UploadPackage(RequestUploadPackage) returns (baseproto.BaseResponse) {}
+}
+
+message UploadDirInfo{
+  string Name = 1;
+  repeated string FileNames = 2;
+  UploadDirInfo InnerDir = 3;
+}
+
+message User {
+  string Username = 1;
+  string Password = 2;
+}
+
+message UploadFile{
+  string FileName = 1;
+  bytes FileBytesData = 2;
+}
+
+message RequestUploadPackage{
+  User User = 1;
+  repeated UploadFile UplFiles = 2;
+  UploadDirInfo UplDirInfo = 3;
+  string Version = 4;
+}

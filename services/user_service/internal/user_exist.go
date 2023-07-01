@@ -8,13 +8,14 @@ import (
 	"strux_api/internal/config/schema"
 	"strux_api/pkg/logging"
 	"strux_api/services/protofiles/baseproto"
+	"strux_api/services/utils"
 )
 
 // UserExist checks if the selected username exists in the database.
 // If no errors occur during the check (see status), success: true means that the user was found, and false is not found.
 func UserExist(username string) *baseproto.BaseResponse {
 	// connect to database
-	clientConnection, ctx, errResponse := GetDbClientConnection()
+	clientConnection, ctx, errResponse := utils.GetDbClientConnection()
 	if errResponse != nil {
 		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "UserExist", "", errResponse.Message)
 		return errResponse
@@ -32,7 +33,7 @@ func UserExist(username string) *baseproto.BaseResponse {
 	err := operation.FindOneByValue("username", username, &user)
 	if err != nil && err != mongo.ErrNoDocuments {
 		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "UserExist", "", err.Error())
-		return SendResponseError(err.Error())
+		return utils.SendResponseError(err.Error())
 	}
 	// user exist
 	if user.Username != "" {

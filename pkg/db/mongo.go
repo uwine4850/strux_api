@@ -92,9 +92,14 @@ func (do *DatabaseOperation) FindOneByValue(colName string, value string, result
 	return err
 }
 
-func (do *DatabaseOperation) DeleteOneEntry(colName string, value string) (*mongo.DeleteResult, error) {
+func (do *DatabaseOperation) FindOneByMultipleValues(values bson.D, result interface{}) error {
 	collection := do.Client.Database(do.DbName).Collection(do.CollectionName)
-	filter := bson.D{{colName, value}}
+	err := collection.FindOne(do.Ctx, values).Decode(result)
+	return err
+}
+
+func (do *DatabaseOperation) DeleteOneEntry(filter bson.D) (*mongo.DeleteResult, error) {
+	collection := do.Client.Database(do.DbName).Collection(do.CollectionName)
 	res, err := collection.DeleteOne(do.Ctx, filter)
 	return res, err
 }
@@ -104,4 +109,13 @@ func (do *DatabaseOperation) FindOneAndUpdate(colName string, value string, newP
 	filter := bson.D{{colName, value}}
 	res := collection.FindOneAndUpdate(do.Ctx, filter, newPassword)
 	return res
+}
+
+func (do *DatabaseOperation) GetCountDocuments(filter bson.D) (int64, error) {
+	collection := do.Client.Database(do.DbName).Collection(do.CollectionName)
+	count, err := collection.CountDocuments(do.Ctx, filter)
+	if err != nil {
+		return -1, err
+	}
+	return count, err
 }

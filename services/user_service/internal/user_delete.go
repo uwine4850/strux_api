@@ -4,17 +4,19 @@ import (
 	"context"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 	"strux_api/internal/config"
 	"strux_api/internal/config/schema"
 	"strux_api/pkg/logging"
 	"strux_api/services/protofiles/baseproto"
+	"strux_api/services/utils"
 )
 
 func UserDelete(username string, password string) *baseproto.BaseResponse {
 	// connect to database
-	clientConnection, ctx, errResponse := GetDbClientConnection()
+	clientConnection, ctx, errResponse := utils.GetDbClientConnection()
 	if errResponse != nil {
 		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "UserDelete", "", errResponse.Message)
 		return errResponse
@@ -33,7 +35,7 @@ func UserDelete(username string, password string) *baseproto.BaseResponse {
 	err := operation.FindOneByValue("username", username, &user)
 	if err != nil && err != mongo.ErrNoDocuments {
 		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "UserDelete", "", err.Error())
-		return SendResponseError(err.Error())
+		return utils.SendResponseError(err.Error())
 	}
 
 	if user.Username != "" {
@@ -49,13 +51,13 @@ func UserDelete(username string, password string) *baseproto.BaseResponse {
 		}
 		if err != nil {
 			logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "UserDelete", "", err.Error())
-			return SendResponseError(err.Error())
+			return utils.SendResponseError(err.Error())
 		}
 		// delete user
-		_, err = operation.DeleteOneEntry("username", username)
+		_, err = operation.DeleteOneEntry(bson.D{{"username", username}})
 		if err != nil {
 			logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "UserDelete", "", err.Error())
-			return SendResponseError(err.Error())
+			return utils.SendResponseError(err.Error())
 		} else {
 			resp := &baseproto.BaseResponse{
 				Message: fmt.Sprintf("User %s deleted.", username),

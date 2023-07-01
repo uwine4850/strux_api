@@ -10,11 +10,12 @@ import (
 	"strux_api/internal/config/schema"
 	"strux_api/pkg/logging"
 	"strux_api/services/protofiles/baseproto"
+	"strux_api/services/utils"
 )
 
 func UserLogIn(username string, password string) *baseproto.BaseResponse {
 	// connect to database
-	clientConnection, ctx, errResponse := GetDbClientConnection()
+	clientConnection, ctx, errResponse := utils.GetDbClientConnection()
 	if errResponse != nil {
 		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "UserLogIn", "", errResponse.Message)
 		return errResponse
@@ -30,9 +31,9 @@ func UserLogIn(username string, password string) *baseproto.BaseResponse {
 	operation := GetUserOperation(clientConnection, ctx)
 	var user schema.User
 	err := operation.FindOneByValue("username", username, &user)
-	if err != nil {
+	if err != nil && err != mongo.ErrNoDocuments {
 		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "UserLogIn", "", err.Error())
-		return SendResponseError(err.Error())
+		return utils.SendResponseError(err.Error())
 	}
 
 	if user.Username != "" {
@@ -47,7 +48,7 @@ func UserLogIn(username string, password string) *baseproto.BaseResponse {
 		}
 		if err != nil {
 			logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "PasswordUpdate", "", err.Error())
-			return SendResponseError(err.Error())
+			return utils.SendResponseError(err.Error())
 		}
 		resp := &baseproto.BaseResponse{
 			Message: "OK",

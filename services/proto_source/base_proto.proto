@@ -7,6 +7,7 @@ option go_package = "strux_api/services/protofiles/baseproto";
 enum ResponseStatus{
   StatusError = 0;
   StatusOk = 1;
+  StatusWarning = 2;
 }
 
 message BaseResponse {

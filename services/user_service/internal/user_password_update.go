@@ -11,6 +11,7 @@ import (
 	"strux_api/internal/config/schema"
 	"strux_api/pkg/logging"
 	"strux_api/services/protofiles/baseproto"
+	"strux_api/services/utils"
 )
 
 func PasswordUpdate(username string, password string, newPassword string) *baseproto.BaseResponse {
@@ -24,7 +25,7 @@ func PasswordUpdate(username string, password string, newPassword string) *basep
 	}
 
 	// connect to database
-	clientConnection, ctx, errResponse := GetDbClientConnection()
+	clientConnection, ctx, errResponse := utils.GetDbClientConnection()
 	if errResponse != nil {
 		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "PasswordUpdate", "", errResponse.Message)
 		return errResponse
@@ -37,7 +38,7 @@ func PasswordUpdate(username string, password string, newPassword string) *basep
 		}
 	}(clientConnection, ctx)
 
-	hashPassword, errResponse := HashPassword(newPassword)
+	hashPassword, errResponse := utils.HashPassword(newPassword)
 	if errResponse != nil {
 		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "PasswordUpdate", "", errResponse.Message)
 		return errResponse
@@ -51,7 +52,7 @@ func PasswordUpdate(username string, password string, newPassword string) *basep
 	err := operation.FindOneByValue("username", username, &user)
 	if err != nil && err != mongo.ErrNoDocuments {
 		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "PasswordUpdate", "", err.Error())
-		return SendResponseError(err.Error())
+		return utils.SendResponseError(err.Error())
 	}
 	if user.Username != "" {
 		// check password match
@@ -66,7 +67,7 @@ func PasswordUpdate(username string, password string, newPassword string) *basep
 		}
 		if err != nil {
 			logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "PasswordUpdate", "", err.Error())
-			return SendResponseError(err.Error())
+			return utils.SendResponseError(err.Error())
 		}
 	} else {
 		// user not exist
@@ -88,7 +89,7 @@ func PasswordUpdate(username string, password string, newPassword string) *basep
 	err = res.Err()
 	if err != nil {
 		logging.CreateLog(config.UserServiceLogFileName, logrus.ErrorLevel, "user_service.internal", "PasswordUpdate", "", err.Error())
-		return SendResponseError(err.Error())
+		return utils.SendResponseError(err.Error())
 	}
 	resp := &baseproto.BaseResponse{
 		Message: "Password updated.",
