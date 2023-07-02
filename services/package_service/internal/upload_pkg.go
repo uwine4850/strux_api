@@ -80,24 +80,9 @@ func UploadPkg(uploadPackage *pkgproto.RequestUploadPackage) *baseproto.BaseResp
 	}
 
 	// find duplicated version
-	values := bson.D{
-		{"packageName", uploadPackage.UplDirInfo.Name},
-		{"parentUserId", user["_id"]},
-	}
-	err = packageOperation.FindOneByMultipleValues(values, map[string]string{})
-	if err != nil && err != mongo.ErrNoDocuments {
-		logging.CreateLog(config.PackageServiceLogFileName, logrus.ErrorLevel, "package_service.internal", "UploadPkg", "", err.Error())
-		return utils.SendResponseError(err.Error())
-	} else {
-		err := pkgVersionOperation.FindOneByValue("version", uploadPackage.Version, map[string]string{})
-		if err != nil && err != mongo.ErrNoDocuments {
-			logging.CreateLog(config.PackageServiceLogFileName, logrus.ErrorLevel, "package_service.internal", "UploadPkg", "", err.Error())
-			return utils.SendResponseError(err.Error())
-		}
-		if err != mongo.ErrNoDocuments {
-			return utils.SendResponseWarning(fmt.Sprintf("Version %s of the %s package already exists.",
-				uploadPackage.Version, uploadPackage.UplDirInfo.Name))
-		}
+	res := findDuplicatedVersion(packageOperation, pkgVersionOperation, uploadPackage, user)
+	if res != nil {
+		return res
 	}
 
 	// create main package dir
@@ -212,10 +197,6 @@ func UploadPkg(uploadPackage *pkgproto.RequestUploadPackage) *baseproto.BaseResp
 		Status:  baseproto.ResponseStatus_StatusOk,
 	}
 
-	err = rollBack.run()
-	if err != nil {
-		return utils.SendResponseError(err.Error())
-	}
 	return resp
 }
 
@@ -334,6 +315,44 @@ func (rb *RollBack) rollBackCreatedPackageVersion() error {
 	}
 	_, err = rb.PackageVersionsOperation.DeleteOneEntry(bson.D{{"_id", objectId}})
 	return err
+}
+
+// findDuplicatedVersion looks for duplicate versions of a package.
+// Duplicates are searched only for the package of a specific user.
+func findDuplicatedVersion(packageOperation db.DatabaseOperation, pkgVersionOperation db.DatabaseOperation,
+	uploadPackage *pkgproto.RequestUploadPackage, user map[string]string) *baseproto.BaseResponse {
+
+	values := bson.D{
+		{"packageName", uploadPackage.UplDirInfo.Name},
+		{"parentUserId", user["_id"]},
+	}
+	err := packageOperation.FindOneByMultipleValues(values, map[string]string{})
+	if err != nil && err != mongo.ErrNoDocuments {
+		logging.CreateLog(config.PackageServiceLogFileName, logrus.ErrorLevel, "package_service.internal", "UploadPkg", "", err.Error())
+		return utils.SendResponseError(err.Error())
+	} else {
+		var currentPackage map[string]string
+		err = packageOperation.FindOneByValue("parentUserId", user["_id"], &currentPackage)
+		if err != nil && err != mongo.ErrNoDocuments {
+			logging.CreateLog(config.PackageServiceLogFileName, logrus.ErrorLevel, "package_service.internal", "UploadPkg", "", err.Error())
+			return utils.SendResponseError(err.Error())
+		}
+		err = pkgVersionOperation.FindOneByMultipleValues(
+			bson.D{
+				{"parentPackageId", currentPackage["_id"]},
+				{"version", uploadPackage.Version},
+			},
+			map[string]string{})
+		if err != nil && err != mongo.ErrNoDocuments {
+			logging.CreateLog(config.PackageServiceLogFileName, logrus.ErrorLevel, "package_service.internal", "UploadPkg", "", err.Error())
+			return utils.SendResponseError(err.Error())
+		}
+		if err != mongo.ErrNoDocuments {
+			return utils.SendResponseWarning(fmt.Sprintf("Version %s of the %s package already exists.",
+				uploadPackage.Version, uploadPackage.UplDirInfo.Name))
+		}
+	}
+	return nil
 }
 
 // CreateNewPackage creates a new package and returns its ID.
