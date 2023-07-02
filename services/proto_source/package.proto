@@ -7,6 +7,13 @@ import "base_proto.proto";
 
 service Package{
   rpc UploadPackage(RequestUploadPackage) returns (baseproto.BaseResponse) {}
+  rpc ExistsPackage(RequestPackageExists) returns (baseproto.BaseResponse) {}
+}
+
+message RequestPackageExists{
+  string Username = 1;
+  string PkgName = 2;
+  string Version = 3;
 }
 
 message UploadDirInfo{

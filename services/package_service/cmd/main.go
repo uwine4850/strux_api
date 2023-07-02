@@ -32,3 +32,8 @@ func (s *server) UploadPackage(c context.Context, request *pkgproto.RequestUploa
 	resp := internal.UploadPkg(request)
 	return resp, nil
 }
+
+func (s *server) ExistsPackage(c context.Context, request *pkgproto.RequestPackageExists) (*baseproto.BaseResponse, error) {
+	resp := internal.ExistsPackage(request)
+	return resp, nil
+}

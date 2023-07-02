@@ -46,6 +46,7 @@ func UploadPkgService(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// setting upload files
 	var uplFilesData []*pkgproto.UploadFile
 	err = setUploadFiles(files["files_data"], &uplFilesData)
 	if err != nil {
@@ -54,6 +55,7 @@ func UploadPkgService(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// parsing files_info and setting dirs info
 	f := files["files_info"][0]
 	uplDirInfo := &pkgproto.UploadDirInfo{}
 	err = setUploadDirInfo(f, uplDirInfo)

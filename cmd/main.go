@@ -23,6 +23,8 @@ func InitRoutes() *chi.Mux {
 	r.Delete("/user-delete/", users.UserDeleteService)
 	r.Put("/user-password-update/", users.UserPasswordUpdateService)
 	r.Get("/user-log-in/", users.UserLogInService)
+
 	r.Post("/upload-pkg/", packages.UploadPkgService)
+	r.Get("/exists-package/", packages.PackageExistsService)
 	return r
 }

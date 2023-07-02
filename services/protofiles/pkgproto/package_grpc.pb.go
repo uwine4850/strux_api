@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PackageClient interface {
 	UploadPackage(ctx context.Context, in *RequestUploadPackage, opts ...grpc.CallOption) (*baseproto.BaseResponse, error)
+	ExistsPackage(ctx context.Context, in *RequestPackageExists, opts ...grpc.CallOption) (*baseproto.BaseResponse, error)
 }
 
 type packageClient struct {
@@ -43,11 +44,21 @@ func (c *packageClient) UploadPackage(ctx context.Context, in *RequestUploadPack
 	return out, nil
 }
 
+func (c *packageClient) ExistsPackage(ctx context.Context, in *RequestPackageExists, opts ...grpc.CallOption) (*baseproto.BaseResponse, error) {
+	out := new(baseproto.BaseResponse)
+	err := c.cc.Invoke(ctx, "/pkgproto.Package/ExistsPackage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PackageServer is the server API for Package service.
 // All implementations must embed UnimplementedPackageServer
 // for forward compatibility
 type PackageServer interface {
 	UploadPackage(context.Context, *RequestUploadPackage) (*baseproto.BaseResponse, error)
+	ExistsPackage(context.Context, *RequestPackageExists) (*baseproto.BaseResponse, error)
 	mustEmbedUnimplementedPackageServer()
 }
 
@@ -57,6 +68,9 @@ type UnimplementedPackageServer struct {
 
 func (UnimplementedPackageServer) UploadPackage(context.Context, *RequestUploadPackage) (*baseproto.BaseResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UploadPackage not implemented")
+}
+func (UnimplementedPackageServer) ExistsPackage(context.Context, *RequestPackageExists) (*baseproto.BaseResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExistsPackage not implemented")
 }
 func (UnimplementedPackageServer) mustEmbedUnimplementedPackageServer() {}
 
@@ -89,6 +103,24 @@ func _Package_UploadPackage_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Package_ExistsPackage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestPackageExists)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PackageServer).ExistsPackage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pkgproto.Package/ExistsPackage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PackageServer).ExistsPackage(ctx, req.(*RequestPackageExists))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Package_ServiceDesc is the grpc.ServiceDesc for Package service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -99,6 +131,10 @@ var Package_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UploadPackage",
 			Handler:    _Package_UploadPackage_Handler,
+		},
+		{
+			MethodName: "ExistsPackage",
+			Handler:    _Package_ExistsPackage_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
