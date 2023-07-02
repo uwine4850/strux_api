@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"reflect"
+	"strings"
 	"strux_api/internal/config"
 	"strux_api/internal/rest_api/routes/errors"
 	"strux_api/internal/rest_api/routes/utils"
@@ -17,8 +18,8 @@ import (
 )
 
 func UploadPkgService(w http.ResponseWriter, r *http.Request) {
-	connection, err := utils.CheckFormKeyAndGetPackageServiceConnection(w, r, []string{"files_data", "files_info"},
-		[]string{"username", "password", "version"})
+	connection, err := utils.CheckFormKeyAndGetPackageServiceConnection(w, r, []string{"files_data"},
+		[]string{"username", "password", "version", "files_info"})
 
 	if reflect.DeepEqual(err, errors.ErrFormKeyNotExist{}) {
 		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
@@ -56,9 +57,10 @@ func UploadPkgService(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// parsing files_info and setting dirs info
-	f := files["files_info"][0]
+	f := values["files_info"][0]
+	reader := strings.NewReader(f)
 	uplDirInfo := &pkgproto.UploadDirInfo{}
-	err = setUploadDirInfo(f, uplDirInfo)
+	err = json.NewDecoder(reader).Decode(&uplDirInfo)
 	if err != nil {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "packages", "UploadPkgService", "", err.Error())
 		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
@@ -91,26 +93,6 @@ func UploadPkgService(w http.ResponseWriter, r *http.Request) {
 		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-}
-
-// setUploadDirInfo decodes the project directory tree into a select structure.
-func setUploadDirInfo(readFile *multipart.FileHeader, uplDirInfo *pkgproto.UploadDirInfo) error {
-	file, err := readFile.Open()
-	if err != nil {
-		return err
-	}
-	defer func(file multipart.File) {
-		err := file.Close()
-		if err != nil {
-			logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "packages", "setUploadDirInfo", "", err.Error())
-			panic(err)
-		}
-	}(file)
-	err = json.NewDecoder(file).Decode(uplDirInfo)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // setUploadFiles populates the appropriate structure with file and byte data.
