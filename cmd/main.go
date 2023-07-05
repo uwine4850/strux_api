@@ -26,5 +26,6 @@ func InitRoutes() *chi.Mux {
 
 	r.Post("/upload-pkg/", packages.UploadPkgService)
 	r.Get("/exists-package/", packages.PackageExistsService)
+	r.Get("/download-package/", packages.DownloadPackage)
 	return r
 }

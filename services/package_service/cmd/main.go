@@ -37,3 +37,18 @@ func (s *server) ExistsPackage(c context.Context, request *pkgproto.RequestPacka
 	resp := internal.ExistsPackage(request)
 	return resp, nil
 }
+
+func (s *server) DownloadPackage(c context.Context, request *pkgproto.RequestDownloadPackage) (*pkgproto.MutateDownloadBaseResponse, error) {
+	internal.DownloadPackage(request)
+	baseResp := &baseproto.BaseResponse{
+		Message: "OK",
+		Success: true,
+		Status:  0,
+	}
+	resp := &pkgproto.MutateDownloadBaseResponse{
+		BaseResponse: baseResp,
+		UplFiles:     nil,
+		UplDirInfo:   nil,
+	}
+	return resp, nil
+}

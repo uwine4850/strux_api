@@ -5,6 +5,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"os"
 	"strux_api/internal/config"
 	"strux_api/pkg/db"
@@ -110,4 +112,16 @@ func GetPackageVersionServiceOperation(clientConnection *mongo.Client, ctx conte
 		Ctx:            ctx,
 	}
 	return pkgVersionOperation
+}
+
+func ConnectToPackageService() (*grpc.ClientConn, error) {
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	connection, err := grpc.Dial(config.PkgServiceAddress, opts...)
+	return connection, err
+}
+
+func ConnectToUserService() (*grpc.ClientConn, error) {
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	connection, err := grpc.Dial(config.UserServiceAddress, opts...)
+	return connection, err
 }

@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"mime/multipart"
 	"net/http"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"strux_api/internal/config"
@@ -47,9 +48,46 @@ func UploadPkgService(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//for names, value := range files {
+	//	dirName := strings.Split(names, "DIR$")
+	//	if len(dirName) > 2 {
+	//		panic("EEEE")
+	//	}
+	//	if len(dirName) < 2 {
+	//		continue
+	//	}
+	//	for j := 0; j < len(value); j++ {
+	//		open, err := value[j].Open()
+	//		if err != nil {
+	//			panic(err)
+	//		}
+	//		buf := new(bytes.Buffer)
+	//		_, err = buf.ReadFrom(open)
+	//		if err != nil {
+	//			panic(err)
+	//		}
+	//		if buf == nil {
+	//			continue
+	//		}
+	//		uplFilesData1 = append(uplFilesData1, &pkgproto.UploadFile{
+	//			FileName:      filepath.Join(dirName[1], value[j].Filename),
+	//			FileBytesData: buf.Bytes(),
+	//		})
+	//	}
+	//}
+
+	//// setting upload files
+	//var uplFilesData []*pkgproto.UploadFile
+	//err = setUploadFiles(files["files_data"], &uplFilesData)
+	//if err != nil {
+	//	logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "packages", "UploadPkgService", "", err.Error())
+	//	utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
+	//	return
+	//}
+
 	// setting upload files
-	var uplFilesData []*pkgproto.UploadFile
-	err = setUploadFiles(files["files_data"], &uplFilesData)
+	var uplFilesData1 []*pkgproto.UploadFile
+	err = setUploadFiles(files, &uplFilesData1)
 	if err != nil {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "packages", "UploadPkgService", "", err.Error())
 		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
@@ -73,7 +111,7 @@ func UploadPkgService(w http.ResponseWriter, r *http.Request) {
 	}
 
 	up := &pkgproto.RequestUploadPackage{
-		UplFiles:   uplFilesData,
+		UplFiles:   uplFilesData1,
 		UplDirInfo: uplDirInfo,
 		User:       user,
 		Version:    values["version"][0],
@@ -96,30 +134,58 @@ func UploadPkgService(w http.ResponseWriter, r *http.Request) {
 }
 
 // setUploadFiles populates the appropriate structure with file and byte data.
-func setUploadFiles(filesData []*multipart.FileHeader, uploadFiles *[]*pkgproto.UploadFile) error {
-	for i := 0; i < len(filesData); i++ {
-		f := filesData[i]
-		fOpen, err := f.Open()
-		if err != nil {
-			return err
+func setUploadFiles(filesData map[string][]*multipart.FileHeader, uploadFiles *[]*pkgproto.UploadFile) error {
+	for names, value := range filesData {
+		dirName := strings.Split(names, "DIR$")
+		if len(dirName) > 2 {
+			return &errors.ErrInvalidFilePath{Path: names}
 		}
-		buf := new(bytes.Buffer)
-		_, err = buf.ReadFrom(fOpen)
-		if err != nil {
-			return err
-		}
-		if buf == nil {
+		if len(dirName) < 2 {
 			continue
 		}
-		u := pkgproto.UploadFile{
-			FileName:      f.Filename,
-			FileBytesData: buf.Bytes(),
-		}
-		*uploadFiles = append(*uploadFiles, &u)
-		err = fOpen.Close()
-		if err != nil {
-			return err
+		for j := 0; j < len(value); j++ {
+			open, err := value[j].Open()
+			if err != nil {
+				return err
+			}
+			buf := new(bytes.Buffer)
+			_, err = buf.ReadFrom(open)
+			if err != nil {
+				return err
+			}
+			if buf == nil {
+				continue
+			}
+			*uploadFiles = append(*uploadFiles, &pkgproto.UploadFile{
+				FileName:      filepath.Join(dirName[1], value[j].Filename),
+				FileBytesData: buf.Bytes(),
+			})
 		}
 	}
 	return nil
+	//for i := 0; i < len(filesData); i++ {
+	//	f := filesData[i]
+	//	fOpen, err := f.Open()
+	//	if err != nil {
+	//		return err
+	//	}
+	//	buf := new(bytes.Buffer)
+	//	_, err = buf.ReadFrom(fOpen)
+	//	if err != nil {
+	//		return err
+	//	}
+	//	if buf == nil {
+	//		continue
+	//	}
+	//	u := pkgproto.UploadFile{
+	//		FileName:      f.Filename,
+	//		FileBytesData: buf.Bytes(),
+	//	}
+	//	*uploadFiles = append(*uploadFiles, &u)
+	//	err = fOpen.Close()
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
+	//return nil
 }

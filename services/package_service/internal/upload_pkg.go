@@ -196,7 +196,6 @@ func UploadPkg(uploadPackage *pkgproto.RequestUploadPackage) *baseproto.BaseResp
 		Success: true,
 		Status:  baseproto.ResponseStatus_StatusOk,
 	}
-
 	return resp
 }
 
@@ -389,8 +388,9 @@ func createFiles(packageDirPath string, files *[]*pkgproto.UploadFile, dirTree m
 	for i := 0; i < len(*files); i++ {
 		for dirPath, dirFiles := range dirTree {
 			for j := 0; j < len(dirFiles); j++ {
-				filePath := filepath.Join(packageDirPath, dirPath, (*files)[i].FileName)
-				if (*files)[i].FileName == dirFiles[j] && !utils.PathExist(filePath) {
+				filePath := filepath.Join(packageDirPath, (*files)[i].FileName)
+				// the paths of the files from the directory tree and the files received from the form are the same.
+				if filepath.Join(packageDirPath, dirPath, dirFiles[j]) == filePath && !utils.PathExist(filePath) {
 					err := os.WriteFile(filePath, (*files)[i].FileBytesData, os.ModePerm)
 					if err != nil {
 						return err
@@ -411,6 +411,7 @@ func createDirTree(packageDirPath string, parentDirName string, uploadDirInfo *p
 	} else {
 		dirPath = filepath.Join(parentDirName, uploadDirInfo.Name)
 	}
+
 	if !utils.PathExist(filepath.Join(packageDirPath, dirPath)) {
 		err := os.MkdirAll(filepath.Join(packageDirPath, dirPath), os.ModePerm)
 		if err != nil {
@@ -422,10 +423,18 @@ func createDirTree(packageDirPath string, parentDirName string, uploadDirInfo *p
 			(*dirTreeMap)[dirPath] = append((*dirTreeMap)[dirPath], uploadDirInfo.FileNames[i])
 		}
 	}
+	if len(uploadDirInfo.FileNames) == 0 {
+		if utils.PathExist(filepath.Join(packageDirPath, dirPath)) {
+			(*dirTreeMap)[dirPath] = append((*dirTreeMap)[dirPath], "")
+		}
+	}
+
 	if uploadDirInfo.InnerDir != nil {
-		err := createDirTree(packageDirPath, dirPath, uploadDirInfo.InnerDir, dirTreeMap)
-		if err != nil {
-			return err
+		for i := 0; i < len(uploadDirInfo.InnerDir); i++ {
+			err := createDirTree(packageDirPath, dirPath, uploadDirInfo.InnerDir[i], dirTreeMap)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

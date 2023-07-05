@@ -8,6 +8,19 @@ import "base_proto.proto";
 service Package{
   rpc UploadPackage(RequestUploadPackage) returns (baseproto.BaseResponse) {}
   rpc ExistsPackage(RequestPackageExists) returns (baseproto.BaseResponse) {}
+  rpc DownloadPackage(RequestDownloadPackage) returns (MutateDownloadBaseResponse) {}
+}
+
+message MutateDownloadBaseResponse{
+  baseproto.BaseResponse BaseResponse = 1;
+  repeated UploadFile UplFiles = 2;
+  UploadDirInfo UplDirInfo = 3;
+}
+
+message RequestDownloadPackage{
+  string Username = 1;
+  string PkgName = 2;
+  string Version = 3;
 }
 
 message RequestPackageExists{
@@ -19,7 +32,7 @@ message RequestPackageExists{
 message UploadDirInfo{
   string Name = 1;
   repeated string FileNames = 2;
-  UploadDirInfo InnerDir = 3;
+  repeated UploadDirInfo InnerDir = 3;
 }
 
 message User {
