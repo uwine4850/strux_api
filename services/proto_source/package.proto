@@ -13,8 +13,9 @@ service Package{
 
 message MutateDownloadBaseResponse{
   baseproto.BaseResponse BaseResponse = 1;
-  repeated UploadFile UplFiles = 2;
+  UploadDirInfo UplFiles = 2;
   UploadDirInfo UplDirInfo = 3;
+  bytes UploadDirsInfoJson = 4;
 }
 
 message RequestDownloadPackage{

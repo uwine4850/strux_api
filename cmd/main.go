@@ -27,5 +27,15 @@ func InitRoutes() *chi.Mux {
 	r.Post("/upload-pkg/", packages.UploadPkgService)
 	r.Get("/exists-package/", packages.PackageExistsService)
 	r.Get("/download-package/", packages.DownloadPackage)
+
+	r.Get("/tee/", tee)
 	return r
+}
+
+func tee(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "multipart/form-data")
+	_, err := w.Write([]byte("HELLO"))
+	if err != nil {
+		panic(err)
+	}
 }
