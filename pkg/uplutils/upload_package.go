@@ -1,4 +1,4 @@
-package upload_package
+package uplutils
 
 import (
 	"encoding/json"

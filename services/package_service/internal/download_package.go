@@ -10,7 +10,7 @@ import (
 	"strux_api/internal/config/schema"
 	"strux_api/pkg/db"
 	"strux_api/pkg/logging"
-	"strux_api/pkg/upload_package"
+	"strux_api/pkg/uplutils"
 	"strux_api/services/protofiles/baseproto"
 	"strux_api/services/protofiles/pkgproto"
 	"strux_api/services/utils"
@@ -42,7 +42,7 @@ func DownloadPackage(requestData *pkgproto.RequestDownloadPackage) *pkgproto.Mut
 	}
 
 	// Getting data about the package (directory).
-	dirInfo, err := upload_package.GetDirsInfo(filepath.Join(downloadPath, requestData.PkgName), requestData.PkgName)
+	dirInfo, err := uplutils.GetDirsInfo(filepath.Join(downloadPath, requestData.PkgName), requestData.PkgName)
 	if err != nil {
 		logging.CreateLog(config.PackageServiceLogFileName, logrus.ErrorLevel, "package_service.internal", "DownloadPackage", "", err.Error())
 		return sendMutateDownloadBaseResponseError(err.Error())
@@ -50,14 +50,14 @@ func DownloadPackage(requestData *pkgproto.RequestDownloadPackage) *pkgproto.Mut
 
 	// Convert pkgproto.UploadDirInfo(dirInfo) to json(map).
 	var uploadDirJson []byte
-	err = upload_package.UploadDirInfoToJson(dirInfo, &uploadDirJson)
+	err = uplutils.UploadDirInfoToJson(dirInfo, &uploadDirJson)
 	if err != nil {
 		logging.CreateLog(config.PackageServiceLogFileName, logrus.ErrorLevel, "package_service.internal", "DownloadPackage", "", err.Error())
 		return sendMutateDownloadBaseResponseError(err.Error())
 	}
 
 	// Creates a new formatted structure pkgproto.UploadDirInfo from dirInfo
-	uplFiles, err := upload_package.CreateUploadFilePaths(dirInfo, downloadPath)
+	uplFiles, err := uplutils.CreateUploadFilePaths(dirInfo, downloadPath)
 	if err != nil {
 		logging.CreateLog(config.PackageServiceLogFileName, logrus.ErrorLevel, "package_service.internal", "DownloadPackage", "", err.Error())
 		return sendMutateDownloadBaseResponseError(err.Error())

@@ -9,6 +9,17 @@ service Package{
   rpc UploadPackage(RequestUploadPackage) returns (baseproto.BaseResponse) {}
   rpc ExistsPackage(RequestPackageExists) returns (baseproto.BaseResponse) {}
   rpc DownloadPackage(RequestDownloadPackage) returns (MutateDownloadBaseResponse) {}
+  rpc ShowVersions(RequestShowVersions) returns (MutateShowVersionBaseResponse) {}
+}
+
+message MutateShowVersionBaseResponse{
+  baseproto.BaseResponse BaseResponse = 1;
+  repeated string Versions = 2;
+}
+
+message RequestShowVersions{
+  string Username = 1;
+  string PkgName = 2;
 }
 
 message MutateDownloadBaseResponse{

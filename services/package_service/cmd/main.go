@@ -42,3 +42,8 @@ func (s *server) DownloadPackage(c context.Context, request *pkgproto.RequestDow
 	resp := internal.DownloadPackage(request)
 	return resp, nil
 }
+
+func (s *server) ShowVersions(c context.Context, request *pkgproto.RequestShowVersions) (*pkgproto.MutateShowVersionBaseResponse, error) {
+	resp := internal.ShowVersions(request)
+	return resp, nil
+}

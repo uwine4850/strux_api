@@ -26,6 +26,7 @@ type PackageClient interface {
 	UploadPackage(ctx context.Context, in *RequestUploadPackage, opts ...grpc.CallOption) (*baseproto.BaseResponse, error)
 	ExistsPackage(ctx context.Context, in *RequestPackageExists, opts ...grpc.CallOption) (*baseproto.BaseResponse, error)
 	DownloadPackage(ctx context.Context, in *RequestDownloadPackage, opts ...grpc.CallOption) (*MutateDownloadBaseResponse, error)
+	ShowVersions(ctx context.Context, in *RequestShowVersions, opts ...grpc.CallOption) (*MutateShowVersionBaseResponse, error)
 }
 
 type packageClient struct {
@@ -63,6 +64,15 @@ func (c *packageClient) DownloadPackage(ctx context.Context, in *RequestDownload
 	return out, nil
 }
 
+func (c *packageClient) ShowVersions(ctx context.Context, in *RequestShowVersions, opts ...grpc.CallOption) (*MutateShowVersionBaseResponse, error) {
+	out := new(MutateShowVersionBaseResponse)
+	err := c.cc.Invoke(ctx, "/pkgproto.Package/ShowVersions", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PackageServer is the server API for Package service.
 // All implementations must embed UnimplementedPackageServer
 // for forward compatibility
@@ -70,6 +80,7 @@ type PackageServer interface {
 	UploadPackage(context.Context, *RequestUploadPackage) (*baseproto.BaseResponse, error)
 	ExistsPackage(context.Context, *RequestPackageExists) (*baseproto.BaseResponse, error)
 	DownloadPackage(context.Context, *RequestDownloadPackage) (*MutateDownloadBaseResponse, error)
+	ShowVersions(context.Context, *RequestShowVersions) (*MutateShowVersionBaseResponse, error)
 	mustEmbedUnimplementedPackageServer()
 }
 
@@ -85,6 +96,9 @@ func (UnimplementedPackageServer) ExistsPackage(context.Context, *RequestPackage
 }
 func (UnimplementedPackageServer) DownloadPackage(context.Context, *RequestDownloadPackage) (*MutateDownloadBaseResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DownloadPackage not implemented")
+}
+func (UnimplementedPackageServer) ShowVersions(context.Context, *RequestShowVersions) (*MutateShowVersionBaseResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ShowVersions not implemented")
 }
 func (UnimplementedPackageServer) mustEmbedUnimplementedPackageServer() {}
 
@@ -153,6 +167,24 @@ func _Package_DownloadPackage_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Package_ShowVersions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestShowVersions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PackageServer).ShowVersions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pkgproto.Package/ShowVersions",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PackageServer).ShowVersions(ctx, req.(*RequestShowVersions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Package_ServiceDesc is the grpc.ServiceDesc for Package service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -171,6 +203,10 @@ var Package_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DownloadPackage",
 			Handler:    _Package_DownloadPackage_Handler,
+		},
+		{
+			MethodName: "ShowVersions",
+			Handler:    _Package_ShowVersions_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

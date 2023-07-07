@@ -15,7 +15,7 @@ import (
 	"strux_api/internal/rest_api/routes/errors"
 	"strux_api/internal/rest_api/routes/utils"
 	"strux_api/pkg/logging"
-	"strux_api/pkg/upload_package"
+	"strux_api/pkg/uplutils"
 	"strux_api/services/protofiles/baseproto"
 	"strux_api/services/protofiles/pkgproto"
 )
@@ -65,7 +65,7 @@ func DownloadPackage(w http.ResponseWriter, r *http.Request) {
 		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = createAndSendForm(w, upload_package.UplFilesToMap(downloadPackageResponse.UplFiles), downloadPackageResponse.UploadDirsInfoJson)
+	err = createAndSendForm(w, uplutils.UplFilesToMap(downloadPackageResponse.UplFiles), downloadPackageResponse.UploadDirsInfoJson)
 	if err != nil {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "packages", "DownloadPackage",
 			"", err.Error())
@@ -112,10 +112,6 @@ func createAndSendForm(w http.ResponseWriter, uplFilesMap map[string][]string, u
 	}
 	w.Header().Set("Content-Type", writer.FormDataContentType())
 	_, err = w.Write(body.Bytes())
-	if err != nil {
-		return err
-	}
-	err = writer.Close()
 	if err != nil {
 		return err
 	}

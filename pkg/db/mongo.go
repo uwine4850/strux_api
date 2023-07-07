@@ -119,3 +119,17 @@ func (do *DatabaseOperation) GetCountDocuments(filter bson.D) (int64, error) {
 	}
 	return count, err
 }
+
+func (do *DatabaseOperation) GetMultipleValues(filter bson.D, res interface{}) error {
+	collection := do.Client.Database(do.DbName).Collection(do.CollectionName)
+	find, err := collection.Find(do.Ctx, filter)
+	if err != nil {
+		return err
+	}
+	err = find.All(context.TODO(), res)
+	//err = find.Decode(&res)
+	if err != nil {
+		return err
+	}
+	return nil
+}
