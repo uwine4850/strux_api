@@ -3,12 +3,12 @@ package internal
 import (
 	"context"
 	"github.com/sirupsen/logrus"
+	"github.com/uwine4850/strux_api/internal/config"
+	"github.com/uwine4850/strux_api/internal/config/schema"
+	"github.com/uwine4850/strux_api/pkg/logging"
+	"github.com/uwine4850/strux_api/services/protofiles/baseproto"
+	"github.com/uwine4850/strux_api/services/utils"
 	"go.mongodb.org/mongo-driver/mongo"
-	"strux_api/internal/config"
-	"strux_api/internal/config/schema"
-	"strux_api/pkg/logging"
-	"strux_api/services/protofiles/baseproto"
-	"strux_api/services/utils"
 )
 
 // UserExist checks if the selected username exists in the database.

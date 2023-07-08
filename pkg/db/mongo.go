@@ -2,10 +2,10 @@ package db
 
 import (
 	"context"
+	"github.com/uwine4850/strux_api/internal/config"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"strux_api/internal/config"
 	"sync"
 )
 

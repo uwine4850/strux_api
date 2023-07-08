@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package userproto;
 
-option go_package = "strux_api/services/protofiles/userproto";
+option go_package = "github.com/uwine4850/strux_api/services/protofiles/userproto;userproto";
 import "base_proto.proto";
 
 service User {

@@ -5,17 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/sirupsen/logrus"
+	"github.com/uwine4850/strux_api/internal/config"
+	"github.com/uwine4850/strux_api/internal/rest_api/routes/errors"
+	"github.com/uwine4850/strux_api/internal/rest_api/routes/utils"
+	"github.com/uwine4850/strux_api/pkg/logging"
+	"github.com/uwine4850/strux_api/services/protofiles/pkgproto"
 	"google.golang.org/grpc"
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
 	"reflect"
 	"strings"
-	"strux_api/internal/config"
-	"strux_api/internal/rest_api/routes/errors"
-	"strux_api/internal/rest_api/routes/utils"
-	"strux_api/pkg/logging"
-	"strux_api/services/protofiles/pkgproto"
 )
 
 func UploadPkgService(w http.ResponseWriter, r *http.Request) {

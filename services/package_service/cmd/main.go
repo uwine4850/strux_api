@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
+	"github.com/uwine4850/strux_api/internal/config"
+	"github.com/uwine4850/strux_api/services/package_service/internal"
+	"github.com/uwine4850/strux_api/services/protofiles/baseproto"
+	"github.com/uwine4850/strux_api/services/protofiles/pkgproto"
 	"google.golang.org/grpc"
 	"net"
-	"strux_api/internal/config"
-	"strux_api/services/package_service/internal"
-	"strux_api/services/protofiles/baseproto"
-	"strux_api/services/protofiles/pkgproto"
 )
 
 func main() {

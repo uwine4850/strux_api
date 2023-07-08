@@ -3,15 +3,15 @@ package utils
 import (
 	"context"
 	"github.com/sirupsen/logrus"
+	"github.com/uwine4850/strux_api/internal/config"
+	"github.com/uwine4850/strux_api/pkg/db"
+	"github.com/uwine4850/strux_api/pkg/logging"
+	"github.com/uwine4850/strux_api/services/protofiles/baseproto"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"os"
-	"strux_api/internal/config"
-	"strux_api/pkg/db"
-	"strux_api/pkg/logging"
-	"strux_api/services/protofiles/baseproto"
 )
 
 // FindOneWitchResponse Searches for a single value in the database. Returns the corresponding response.

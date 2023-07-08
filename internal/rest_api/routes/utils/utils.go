@@ -2,16 +2,16 @@ package utils
 
 import (
 	"github.com/sirupsen/logrus"
+	"github.com/uwine4850/strux_api/internal/config"
+	"github.com/uwine4850/strux_api/internal/rest_api/routes/errors"
+	"github.com/uwine4850/strux_api/pkg/logging"
+	"github.com/uwine4850/strux_api/services/protofiles/baseproto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"mime/multipart"
 	"net/http"
-	"strux_api/internal/config"
-	"strux_api/internal/rest_api/routes/errors"
-	"strux_api/pkg/logging"
-	"strux_api/services/protofiles/baseproto"
 )
 
 // CreateResponse Creates and sends a response to the client

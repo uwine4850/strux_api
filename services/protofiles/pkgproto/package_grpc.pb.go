@@ -8,10 +8,10 @@ package pkgproto
 
 import (
 	context "context"
+	baseproto "github.com/uwine4850/strux_api/services/protofiles/baseproto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	baseproto "strux_api/services/protofiles/baseproto"
 )
 
 // This is a compile-time assertion to ensure that this generated file

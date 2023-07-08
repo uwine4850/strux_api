@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package baseproto;
 
-option go_package = "strux_api/services/protofiles/baseproto";
+option go_package = "github.com/uwine4850/strux_api/services/protofiles/baseproto;baseproto";
 
 enum ResponseStatus{
   StatusError = 0;

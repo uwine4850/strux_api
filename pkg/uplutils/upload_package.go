@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/uwine4850/strux_api/services/protofiles/pkgproto"
+	"github.com/uwine4850/strux_api/services/utils"
 	"os"
 	"path/filepath"
 	"reflect"
-	"strux_api/services/protofiles/pkgproto"
-	"strux_api/services/utils"
 )
 
 // GetDirsInfo Recursively populates the pkgproto.UploadDirInfo structure.

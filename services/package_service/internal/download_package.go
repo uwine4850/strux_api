@@ -3,17 +3,17 @@ package internal
 import (
 	"context"
 	"github.com/sirupsen/logrus"
+	"github.com/uwine4850/strux_api/internal/config"
+	"github.com/uwine4850/strux_api/internal/config/schema"
+	"github.com/uwine4850/strux_api/pkg/db"
+	"github.com/uwine4850/strux_api/pkg/logging"
+	"github.com/uwine4850/strux_api/pkg/uplutils"
+	"github.com/uwine4850/strux_api/services/protofiles/baseproto"
+	"github.com/uwine4850/strux_api/services/protofiles/pkgproto"
+	"github.com/uwine4850/strux_api/services/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"path/filepath"
-	"strux_api/internal/config"
-	"strux_api/internal/config/schema"
-	"strux_api/pkg/db"
-	"strux_api/pkg/logging"
-	"strux_api/pkg/uplutils"
-	"strux_api/services/protofiles/baseproto"
-	"strux_api/services/protofiles/pkgproto"
-	"strux_api/services/utils"
 )
 
 func DownloadPackage(requestData *pkgproto.RequestDownloadPackage) *pkgproto.MutateDownloadBaseResponse {

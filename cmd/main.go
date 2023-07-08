@@ -2,10 +2,10 @@ package main
 
 import (
 	"github.com/go-chi/chi/v5"
+	"github.com/uwine4850/strux_api/internal/config"
+	"github.com/uwine4850/strux_api/internal/rest_api/routes/packages"
+	"github.com/uwine4850/strux_api/internal/rest_api/routes/users"
 	"net/http"
-	"strux_api/internal/config"
-	"strux_api/internal/rest_api/routes/packages"
-	"strux_api/internal/rest_api/routes/users"
 )
 
 func main() {

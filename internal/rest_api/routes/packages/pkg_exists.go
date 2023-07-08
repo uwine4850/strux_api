@@ -3,15 +3,15 @@ package packages
 import (
 	"context"
 	"github.com/sirupsen/logrus"
+	"github.com/uwine4850/strux_api/internal/config"
+	"github.com/uwine4850/strux_api/internal/rest_api/routes/errors"
+	"github.com/uwine4850/strux_api/internal/rest_api/routes/utils"
+	"github.com/uwine4850/strux_api/pkg/logging"
+	"github.com/uwine4850/strux_api/services/protofiles/baseproto"
+	"github.com/uwine4850/strux_api/services/protofiles/pkgproto"
 	"google.golang.org/grpc"
 	"net/http"
 	"reflect"
-	"strux_api/internal/config"
-	"strux_api/internal/rest_api/routes/errors"
-	"strux_api/internal/rest_api/routes/utils"
-	"strux_api/pkg/logging"
-	"strux_api/services/protofiles/baseproto"
-	"strux_api/services/protofiles/pkgproto"
 )
 
 func PackageExistsService(w http.ResponseWriter, r *http.Request) {
