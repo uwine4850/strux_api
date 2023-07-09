@@ -49,10 +49,6 @@ func UploadDirInfoToJson(uploadDirInfo *pkgproto.UploadDirInfo, mapData *[]byte)
 		return err
 	}
 	*mapData = marshal
-	//err = json.Unmarshal(marshal, mapData)
-	//if err != nil {
-	//	return err
-	//}
 	return nil
 }
 

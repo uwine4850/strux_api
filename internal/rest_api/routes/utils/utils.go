@@ -9,16 +9,15 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
 	"mime/multipart"
 	"net/http"
 )
 
 // CreateResponse Creates and sends a response to the client
-func CreateResponse(w http.ResponseWriter, httpStatus int, response proto.Message) error {
+func CreateResponse(w http.ResponseWriter, httpStatus int, response *baseproto.BaseResponse) error {
 	w.WriteHeader(httpStatus)
 	w.Header().Set("Content-Type", "application/json")
-	jm := protojson.MarshalOptions{EmitUnpopulated: true}
+	jm := protojson.MarshalOptions{EmitUnpopulated: true, UseEnumNumbers: true}
 	jsonResp, err := jm.Marshal(response)
 	if err != nil {
 		return err

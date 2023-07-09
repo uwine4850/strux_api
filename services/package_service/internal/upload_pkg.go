@@ -136,7 +136,7 @@ func UploadPkg(uploadPackage *pkgproto.RequestUploadPackage) *baseproto.BaseResp
 
 	// creating a directory tree from the passed json file.
 	dirTreeMap := make(map[string][]string)
-	err = createDirTree(packageDirPath, "", uploadPackage.UplDirInfo, &dirTreeMap)
+	err = createDirTree(packageDirPath, uploadPackage.UplDirInfo, &dirTreeMap)
 	if err != nil {
 		logging.CreateLog(config.PackageServiceLogFileName, logrus.ErrorLevel, "package_service.internal", "UploadPkg", "", err.Error())
 		errRollBack := rollBack.run()
@@ -330,12 +330,22 @@ func findDuplicatedVersion(packageOperation db.DatabaseOperation, pkgVersionOper
 		logging.CreateLog(config.PackageServiceLogFileName, logrus.ErrorLevel, "package_service.internal", "UploadPkg", "", err.Error())
 		return utils.SendResponseError(err.Error())
 	} else {
+		// get package
 		var currentPackage map[string]string
-		err = packageOperation.FindOneByValue("parentUserId", user["_id"], &currentPackage)
+		err = packageOperation.FindOneByMultipleValues(bson.D{
+			{"parentUserId", user["_id"]},
+			{"packageName", uploadPackage.UplDirInfo.Name},
+		}, &currentPackage)
 		if err != nil && err != mongo.ErrNoDocuments {
 			logging.CreateLog(config.PackageServiceLogFileName, logrus.ErrorLevel, "package_service.internal", "UploadPkg", "", err.Error())
 			return utils.SendResponseError(err.Error())
 		}
+		// return nil(false) if package not exist
+		if err == mongo.ErrNoDocuments {
+			return nil
+		}
+
+		// if package exist check versions
 		err = pkgVersionOperation.FindOneByMultipleValues(
 			bson.D{
 				{"parentPackageId", currentPackage["_id"]},
@@ -404,14 +414,8 @@ func createFiles(packageDirPath string, files *[]*pkgproto.UploadFile, dirTree m
 }
 
 // createDirTree recursively creates and returns a package directory tree.
-func createDirTree(packageDirPath string, parentDirName string, uploadDirInfo *pkgproto.UploadDirInfo, dirTreeMap *map[string][]string) error {
-	dirPath := ""
-	if parentDirName == "" {
-		dirPath = uploadDirInfo.Name
-	} else {
-		dirPath = filepath.Join(parentDirName, uploadDirInfo.Name)
-	}
-
+func createDirTree(packageDirPath string, uploadDirInfo *pkgproto.UploadDirInfo, dirTreeMap *map[string][]string) error {
+	dirPath := uploadDirInfo.Name
 	if !utils.PathExist(filepath.Join(packageDirPath, dirPath)) {
 		err := os.MkdirAll(filepath.Join(packageDirPath, dirPath), os.ModePerm)
 		if err != nil {
@@ -431,7 +435,7 @@ func createDirTree(packageDirPath string, parentDirName string, uploadDirInfo *p
 
 	if uploadDirInfo.InnerDir != nil {
 		for i := 0; i < len(uploadDirInfo.InnerDir); i++ {
-			err := createDirTree(packageDirPath, dirPath, uploadDirInfo.InnerDir[i], dirTreeMap)
+			err := createDirTree(packageDirPath, uploadDirInfo.InnerDir[i], dirTreeMap)
 			if err != nil {
 				return err
 			}

@@ -19,7 +19,7 @@ import (
 )
 
 func UploadPkgService(w http.ResponseWriter, r *http.Request) {
-	connection, err := utils.CheckFormKeyAndGetPackageServiceConnection(w, r, []string{"files_data"},
+	connection, err := utils.CheckFormKeyAndGetPackageServiceConnection(w, r, []string{},
 		[]string{"username", "password", "version", "files_info"})
 
 	if reflect.DeepEqual(err, errors.ErrFormKeyNotExist{}) {
@@ -47,7 +47,6 @@ func UploadPkgService(w http.ResponseWriter, r *http.Request) {
 		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	// setting upload files
 	var uplFilesData1 []*pkgproto.UploadFile
 	err = setUploadFiles(files, &uplFilesData1)
@@ -56,7 +55,6 @@ func UploadPkgService(w http.ResponseWriter, r *http.Request) {
 		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	// parsing files_info and setting dirs info
 	f := values["files_info"][0]
 	reader := strings.NewReader(f)

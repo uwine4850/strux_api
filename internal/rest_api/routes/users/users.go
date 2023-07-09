@@ -130,7 +130,6 @@ func UserExistService(w http.ResponseWriter, r *http.Request) {
 	checkExistUsername := values["username"][0]
 	// send request
 	response, err := client.UserExist(context.Background(), &userproto.RequestExistUser{Username: checkExistUsername})
-
 	// catch errors and send response
 	if err != nil {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "routes", "userExistService", "", err.Error())
