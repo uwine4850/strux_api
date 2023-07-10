@@ -127,7 +127,15 @@ func (do *DatabaseOperation) GetMultipleValues(filter bson.D, res interface{}) e
 		return err
 	}
 	err = find.All(context.TODO(), res)
-	//err = find.Decode(&res)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (do *DatabaseOperation) DeleteManyDocuments(filter bson.D) error {
+	collection := do.Client.Database(do.DbName).Collection(do.CollectionName)
+	_, err := collection.DeleteMany(do.Ctx, filter)
 	if err != nil {
 		return err
 	}
