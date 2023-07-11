@@ -1,7 +1,6 @@
 package packages
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"github.com/sirupsen/logrus"
@@ -9,11 +8,10 @@ import (
 	"github.com/uwine4850/strux_api/internal/rest_api/routes/errors"
 	"github.com/uwine4850/strux_api/internal/rest_api/routes/utils"
 	"github.com/uwine4850/strux_api/pkg/logging"
+	"github.com/uwine4850/strux_api/pkg/uplutils"
 	"github.com/uwine4850/strux_api/services/protofiles/pkgproto"
 	"google.golang.org/grpc"
-	"mime/multipart"
 	"net/http"
-	"path/filepath"
 	"reflect"
 	"strings"
 )
@@ -49,7 +47,7 @@ func UploadPkgService(w http.ResponseWriter, r *http.Request) {
 	}
 	// setting upload files
 	var uplFilesData1 []*pkgproto.UploadFile
-	err = setUploadFiles(files, &uplFilesData1)
+	err = uplutils.SetUploadFiles(files, &uplFilesData1)
 	if err != nil {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "packages", "UploadPkgService", "", err.Error())
 		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
@@ -92,36 +90,4 @@ func UploadPkgService(w http.ResponseWriter, r *http.Request) {
 		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-}
-
-// setUploadFiles populates the appropriate structure with file and byte data.
-func setUploadFiles(filesData map[string][]*multipart.FileHeader, uploadFiles *[]*pkgproto.UploadFile) error {
-	for names, value := range filesData {
-		dirName := strings.Split(names, "DIR$")
-		if len(dirName) > 2 {
-			return &errors.ErrInvalidFilePath{Path: names}
-		}
-		if len(dirName) < 2 {
-			continue
-		}
-		for j := 0; j < len(value); j++ {
-			open, err := value[j].Open()
-			if err != nil {
-				return err
-			}
-			buf := new(bytes.Buffer)
-			_, err = buf.ReadFrom(open)
-			if err != nil {
-				return err
-			}
-			if buf == nil {
-				continue
-			}
-			*uploadFiles = append(*uploadFiles, &pkgproto.UploadFile{
-				FileName:      filepath.Join(dirName[1], value[j].Filename),
-				FileBytesData: buf.Bytes(),
-			})
-		}
-	}
-	return nil
 }

@@ -1,14 +1,17 @@
 package uplutils
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/uwine4850/strux_api/services/protofiles/pkgproto"
 	"github.com/uwine4850/strux_api/services/utils"
+	"mime/multipart"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 )
 
 // GetDirsInfo Recursively populates the pkgproto.UploadDirInfo structure.
@@ -129,4 +132,91 @@ func UplFilesToMap(uplFiles *pkgproto.UploadDirInfo) map[string][]string {
 		}
 	}
 	return uplFilesMap
+}
+
+// CreateDirTree Recursively creates a directory tree at the specified path.
+// After that it returns a map with directory addresses and names of their files.
+func CreateDirTree(packageDirPath string, uploadDirInfo *pkgproto.UploadDirInfo, dirTreeMap *map[string][]string) error {
+	dirPath := uploadDirInfo.Name
+	if !utils.PathExist(filepath.Join(packageDirPath, dirPath)) {
+		err := os.MkdirAll(filepath.Join(packageDirPath, dirPath), os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+	for i := 0; i < len(uploadDirInfo.FileNames); i++ {
+		if utils.PathExist(filepath.Join(packageDirPath, dirPath)) {
+			(*dirTreeMap)[dirPath] = append((*dirTreeMap)[dirPath], uploadDirInfo.FileNames[i])
+		}
+	}
+	if len(uploadDirInfo.FileNames) == 0 {
+		if utils.PathExist(filepath.Join(packageDirPath, dirPath)) {
+			(*dirTreeMap)[dirPath] = append((*dirTreeMap)[dirPath], "")
+		}
+	}
+
+	if uploadDirInfo.InnerDir != nil {
+		for i := 0; i < len(uploadDirInfo.InnerDir); i++ {
+			err := CreateDirTree(packageDirPath, uploadDirInfo.InnerDir[i], dirTreeMap)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// SetUploadFiles extracts files from the form and writes them to the pkgproto.UploadFile structure.
+// If the form field name starts with DIR$ it means that this is the path to the directory with files.
+// The value of the files in this field corresponds to the files in the same directory of the file system.
+func SetUploadFiles(filesData map[string][]*multipart.FileHeader, uploadFiles *[]*pkgproto.UploadFile) error {
+	for names, value := range filesData {
+		dirName := strings.Split(names, "DIR$")
+		if len(dirName) > 2 {
+			return errors.New(fmt.Sprintf("The path \"%s\" could not be processed.", names))
+		}
+		if len(dirName) < 2 {
+			continue
+		}
+		for j := 0; j < len(value); j++ {
+			open, err := value[j].Open()
+			if err != nil {
+				return err
+			}
+			buf := new(bytes.Buffer)
+			_, err = buf.ReadFrom(open)
+			if err != nil {
+				return err
+			}
+			if buf == nil {
+				continue
+			}
+			*uploadFiles = append(*uploadFiles, &pkgproto.UploadFile{
+				FileName:      filepath.Join(dirName[1], value[j].Filename),
+				FileBytesData: buf.Bytes(),
+			})
+		}
+	}
+	return nil
+}
+
+// CreateFiles creates files in their parent directories.
+// Skips a directory if there are no files in it.
+func CreateFiles(packageDirPath string, files *[]*pkgproto.UploadFile, dirTree map[string][]string) error {
+	for i := 0; i < len(*files); i++ {
+		for dirPath, dirFiles := range dirTree {
+			for j := 0; j < len(dirFiles); j++ {
+				filePath := filepath.Join(packageDirPath, (*files)[i].FileName)
+				// the paths of the files from the directory tree and the files received from the form are the same.
+				if filepath.Join(packageDirPath, dirPath, dirFiles[j]) == filePath && !utils.PathExist(filePath) {
+					err := os.WriteFile(filePath, (*files)[i].FileBytesData, os.ModePerm)
+					if err != nil {
+						return err
+					}
+					dirTree[dirPath] = append(dirTree[dirPath][:j], dirTree[dirPath][j+1:]...)
+				}
+			}
+		}
+	}
+	return nil
 }

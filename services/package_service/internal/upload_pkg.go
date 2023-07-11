@@ -9,6 +9,7 @@ import (
 	"github.com/uwine4850/strux_api/internal/config/schema"
 	"github.com/uwine4850/strux_api/pkg/db"
 	"github.com/uwine4850/strux_api/pkg/logging"
+	"github.com/uwine4850/strux_api/pkg/uplutils"
 	"github.com/uwine4850/strux_api/services/protofiles/baseproto"
 	"github.com/uwine4850/strux_api/services/protofiles/pkgproto"
 	"github.com/uwine4850/strux_api/services/protofiles/userproto"
@@ -136,7 +137,7 @@ func UploadPkg(uploadPackage *pkgproto.RequestUploadPackage) *baseproto.BaseResp
 
 	// creating a directory tree from the passed json file.
 	dirTreeMap := make(map[string][]string)
-	err = createDirTree(packageDirPath, uploadPackage.UplDirInfo, &dirTreeMap)
+	err = uplutils.CreateDirTree(packageDirPath, uploadPackage.UplDirInfo, &dirTreeMap)
 	if err != nil {
 		logging.CreateLog(config.PackageServiceLogFileName, logrus.ErrorLevel, "package_service.internal", "UploadPkg", "", err.Error())
 		errRollBack := rollBack.run()
@@ -148,7 +149,7 @@ func UploadPkg(uploadPackage *pkgproto.RequestUploadPackage) *baseproto.BaseResp
 	}
 
 	// create files
-	err = createFiles(packageDirPath, &uploadPackage.UplFiles, dirTreeMap)
+	err = uplutils.CreateFiles(packageDirPath, &uploadPackage.UplFiles, dirTreeMap)
 	if err != nil {
 		logging.CreateLog(config.PackageServiceLogFileName, logrus.ErrorLevel, "package_service.internal", "UploadPkg", "", err.Error())
 		errRollBack := rollBack.run()
@@ -391,57 +392,6 @@ func CreateNewPackage(packageOperation db.DatabaseOperation, uploadPackage *pkgp
 		insertedPkgId = findPackage["_id"]
 	}
 	return insertedPkgId, nil
-}
-
-// createFiles creates files from a list in a pre-created directory tree.
-func createFiles(packageDirPath string, files *[]*pkgproto.UploadFile, dirTree map[string][]string) error {
-	for i := 0; i < len(*files); i++ {
-		for dirPath, dirFiles := range dirTree {
-			for j := 0; j < len(dirFiles); j++ {
-				filePath := filepath.Join(packageDirPath, (*files)[i].FileName)
-				// the paths of the files from the directory tree and the files received from the form are the same.
-				if filepath.Join(packageDirPath, dirPath, dirFiles[j]) == filePath && !utils.PathExist(filePath) {
-					err := os.WriteFile(filePath, (*files)[i].FileBytesData, os.ModePerm)
-					if err != nil {
-						return err
-					}
-					dirTree[dirPath] = append(dirTree[dirPath][:j], dirTree[dirPath][j+1:]...)
-				}
-			}
-		}
-	}
-	return nil
-}
-
-// createDirTree recursively creates and returns a package directory tree.
-func createDirTree(packageDirPath string, uploadDirInfo *pkgproto.UploadDirInfo, dirTreeMap *map[string][]string) error {
-	dirPath := uploadDirInfo.Name
-	if !utils.PathExist(filepath.Join(packageDirPath, dirPath)) {
-		err := os.MkdirAll(filepath.Join(packageDirPath, dirPath), os.ModePerm)
-		if err != nil {
-			return err
-		}
-	}
-	for i := 0; i < len(uploadDirInfo.FileNames); i++ {
-		if utils.PathExist(filepath.Join(packageDirPath, dirPath)) {
-			(*dirTreeMap)[dirPath] = append((*dirTreeMap)[dirPath], uploadDirInfo.FileNames[i])
-		}
-	}
-	if len(uploadDirInfo.FileNames) == 0 {
-		if utils.PathExist(filepath.Join(packageDirPath, dirPath)) {
-			(*dirTreeMap)[dirPath] = append((*dirTreeMap)[dirPath], "")
-		}
-	}
-
-	if uploadDirInfo.InnerDir != nil {
-		for i := 0; i < len(uploadDirInfo.InnerDir); i++ {
-			err := createDirTree(packageDirPath, uploadDirInfo.InnerDir[i], dirTreeMap)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
 }
 
 func connectToUserService() (*grpc.ClientConn, error) {
