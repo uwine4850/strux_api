@@ -2,6 +2,8 @@ package internal
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/uwine4850/strux_api/internal/config"
 	"github.com/uwine4850/strux_api/internal/config/schema"
@@ -140,5 +142,5 @@ func checkingPackageExistsAndGetDownloadPath(requestData *pkgproto.RequestDownlo
 	if err != nil {
 		return "", err
 	}
-	return "", err
+	return "", errors.New(fmt.Sprintf("Package %s/%s not exist.", requestData.PkgName, requestData.Version))
 }

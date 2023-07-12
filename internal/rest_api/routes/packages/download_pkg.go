@@ -62,7 +62,7 @@ func DownloadPackage(w http.ResponseWriter, r *http.Request) {
 	if downloadPackageResponse.BaseResponse.Status == baseproto.ResponseStatus_StatusError {
 		logging.CreateLog(config.APILogFileName, logrus.ErrorLevel, "packages", "DownloadPackage",
 			"", downloadPackageResponse.BaseResponse.Message)
-		utils.SendResponseError(w, err.Error(), http.StatusInternalServerError)
+		utils.SendResponseError(w, downloadPackageResponse.BaseResponse.Message, http.StatusInternalServerError)
 		return
 	}
 	err = createAndSendForm(w, uplutils.UplFilesToMap(downloadPackageResponse.UplFiles), downloadPackageResponse.UploadDirsInfoJson)
