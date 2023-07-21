@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/uwine4850/strux_api/internal/config"
 	"github.com/uwine4850/strux_api/internal/rest_api/routes/packages"
@@ -9,6 +10,7 @@ import (
 )
 
 func main() {
+	fmt.Println("Start api server.")
 	err := http.ListenAndServe(config.Host+":"+config.Port, InitRoutes())
 	if err != nil {
 		panic(err)

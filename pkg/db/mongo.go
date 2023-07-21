@@ -46,7 +46,7 @@ func GetMongoClient() (*Client, error) {
 		defer lock.Unlock()
 		if singleInstance == nil {
 			ctx := context.TODO()
-			clientOptions := options.Client().ApplyURI(config.MongoUrl)
+			clientOptions := options.Client().ApplyURI(config.GetMongoAddress())
 			singleInstance = &Client{
 				Options: clientOptions,
 				Ctx:     ctx,

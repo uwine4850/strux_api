@@ -1,0 +1,14 @@
+FROM golang:1.21rc3-alpine3.18
+
+WORKDIR /usr/src/app
+
+# pre-copy/cache go.mod for pre-downloading dependencies and only redownloading them in subsequent builds if they change
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
+COPY . .
+ENV USER_SERVICE_ADDRESS=user_service:5300
+ENV PACKAGE_SERVICE_ADDRESS=package_service:5301
+RUN go build -v -o /usr/local/bin/strux_api ./cmd
+
+CMD ["/usr/local/bin/strux_api"]

@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:7.0.0-rc8
+    restart: always
+    ports:
+      - 27017:27017
+
+  user_service:
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.user
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_ADDRESS=mongodb://mongo:27017/
+
+  package_service:
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.package
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_ADDRESS=mongodb://mongo:27017/
+
+  api:
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    depends_on:
+      - user_service
+      - package_service
+      - mongo
+    ports:
+      - 8000:3000
+    environment:
+      - MONGO_ADDRESS=mongodb://mongo:27017/

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/uwine4850/strux_api/internal/config"
 	"github.com/uwine4850/strux_api/services/package_service/internal"
 	"github.com/uwine4850/strux_api/services/protofiles/baseproto"
@@ -11,7 +12,8 @@ import (
 )
 
 func main() {
-	listener, err := net.Listen("tcp", config.PkgServiceAddress)
+	fmt.Println("Start package service.")
+	listener, err := net.Listen("tcp", config.GetPkgServiceAddress())
 	if err != nil {
 		panic(err)
 	}

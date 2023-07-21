@@ -116,12 +116,12 @@ func GetPackageVersionServiceOperation(clientConnection *mongo.Client, ctx conte
 
 func ConnectToPackageService() (*grpc.ClientConn, error) {
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-	connection, err := grpc.Dial(config.PkgServiceAddress, opts...)
+	connection, err := grpc.Dial(config.GetPkgServiceAddress(), opts...)
 	return connection, err
 }
 
 func ConnectToUserService() (*grpc.ClientConn, error) {
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-	connection, err := grpc.Dial(config.UserServiceAddress, opts...)
+	connection, err := grpc.Dial(config.GetUserServiceAddress(), opts...)
 	return connection, err
 }

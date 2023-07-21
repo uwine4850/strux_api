@@ -396,7 +396,7 @@ func CreateNewPackage(packageOperation db.DatabaseOperation, uploadPackage *pkgp
 
 func connectToUserService() (*grpc.ClientConn, error) {
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-	connection, err := grpc.Dial(config.UserServiceAddress, opts...)
+	connection, err := grpc.Dial(config.GetUserServiceAddress(), opts...)
 	return connection, err
 }
 

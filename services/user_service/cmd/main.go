@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/uwine4850/strux_api/internal/config"
 	"github.com/uwine4850/strux_api/services/protofiles/baseproto"
 	"github.com/uwine4850/strux_api/services/protofiles/userproto"
@@ -12,7 +13,8 @@ import (
 )
 
 func main() {
-	listener, err := net.Listen("tcp", config.UserServiceAddress)
+	fmt.Println("Start user service.")
+	listener, err := net.Listen("tcp", config.GetUserServiceAddress())
 
 	if err != nil {
 		grpclog.Fatalf("failed to listen: %v", err)

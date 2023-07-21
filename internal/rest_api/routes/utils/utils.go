@@ -85,7 +85,7 @@ func ConnectToUserService() (*grpc.ClientConn, error) {
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
-	conn, err := grpc.Dial(config.UserServiceAddress, opts...)
+	conn, err := grpc.Dial(config.GetUserServiceAddress(), opts...)
 	return conn, err
 }
 
@@ -94,7 +94,7 @@ func ConnectToPackageService() (*grpc.ClientConn, error) {
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
-	conn, err := grpc.Dial(config.PkgServiceAddress, opts...)
+	conn, err := grpc.Dial(config.GetPkgServiceAddress(), opts...)
 	return conn, err
 }
 
